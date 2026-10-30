@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+psycopg[binary]
+neo4j
+numpy
+pandas
+networkx
+scipy
+httpx
+python-dotenv
+# Optional genuine Leiden: install igraph and leidenalg. The model reports its fallback.

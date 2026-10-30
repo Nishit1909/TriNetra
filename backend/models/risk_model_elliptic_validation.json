@@ -1,0 +1,101 @@
+{
+  "model_version": "xgb-shared-schema-elliptic-20260905",
+  "trained_at": "2026-09-05T08:40:24+00:00",
+  "training_dataset": "elliptic",
+  "n_train": 46564,
+  "validation": {
+    "kfold": {
+      "precision_mean": 0.2781852144040689,
+      "recall_mean": 0.8651265126512652,
+      "f1_mean": 0.42094303240413183,
+      "accuracy_mean": 0.7675457748895514,
+      "auc_mean": 0.884080946403696,
+      "auprc_mean": 0.49423923479935306,
+      "precision_std": 0.006988168539629537,
+      "recall_std": 0.009755687250779032,
+      "f1_std": 0.008222259817835828,
+      "accuracy_std": 0.0076556661826949176,
+      "auc_std": 0.0033937523005274813,
+      "auprc_std": 0.006600115661776923,
+      "fold_scores": [
+        {
+          "precision": 0.2732414280664546,
+          "recall": 0.8503850385038504,
+          "f1": 0.41359015516318887,
+          "accuracy": 0.764630086975196,
+          "auc": 0.8794052834602832,
+          "auprc": 0.48563781725790206
+        },
+        {
+          "precision": 0.26745762711864407,
+          "recall": 0.8679867986798679,
+          "f1": 0.408914226483545,
+          "accuracy": 0.7550735530978202,
+          "auc": 0.8812245098855435,
+          "auprc": 0.4996391950802726
+        },
+        {
+          "precision": 0.287292817679558,
+          "recall": 0.858085808580858,
+          "f1": 0.4304635761589404,
+          "accuracy": 0.7783743154729947,
+          "auc": 0.884483474525463,
+          "auprc": 0.5004040559644602
+        },
+        {
+          "precision": 0.28175026680896476,
+          "recall": 0.8712871287128713,
+          "f1": 0.4258064516129032,
+          "accuracy": 0.770643186942983,
+          "auc": 0.888643052786954,
+          "auprc": 0.48674640087040344
+        },
+        {
+          "precision": 0.28118393234672306,
+          "recall": 0.8778877887788779,
+          "f1": 0.42594075260208164,
+          "accuracy": 0.7690077319587629,
+          "auc": 0.8866484113602363,
+          "auprc": 0.49876870482372715
+        }
+      ],
+      "confusion_matrix": {
+        "tn": 31808,
+        "fp": 10211,
+        "fn": 613,
+        "tp": 3932
+      },
+      "threshold": 0.5,
+      "n_folds": 5
+    },
+    "n_labelled": 46564,
+    "positive_rate": 0.09760759384932566,
+    "headline_note": "Illicit is a minority class \u2014 judge by precision/recall/F1/AUPRC, not accuracy.",
+    "feature_importance": {
+      "pagerank_percentile": 0.11261975765228271,
+      "community_size_percentile": 0.27994871139526367,
+      "connection_percentile": 0.34782546758651733,
+      "structuring_flag": 0.0,
+      "odd_hour_ratio": 0.0,
+      "dormant_reactivation_flag": 0.0,
+      "fan_out_flag": 0.0,
+      "cross_layer_ratio": 0.0,
+      "lp_agreement_flag": 0.0,
+      "clustering_percentile": 0.1234203577041626,
+      "avg_neighbor_degree_percentile": 0.1361856907606125
+    },
+    "notes": [
+      "Features entirely missing in the training data (model cannot learn their meaning; they are kept in the schema so case tables align): ['structuring_flag', 'odd_hour_ratio', 'dormant_reactivation_flag', 'fan_out_flag', 'cross_layer_ratio', 'lp_agreement_flag']",
+      "No time_step available (features file not supplied) \u2014 temporal hold-out not reported."
+    ]
+  },
+  "risk_model_validation_row": {
+    "model_version": "xgb-shared-schema-elliptic-20260905",
+    "dataset": "elliptic",
+    "precision": 0.2781852144040689,
+    "recall": 0.8651265126512652,
+    "f1": 0.42094303240413183,
+    "auc": 0.884080946403696,
+    "trained_at": "2026-09-05T08:40:24+00:00"
+  }
+}
