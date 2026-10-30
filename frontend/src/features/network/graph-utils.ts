@@ -50,7 +50,10 @@ export function filterGraph(
   department: string,
   community: string,
 ): { nodes: GraphNode[]; links: GraphEdge[] } {
-  const tiered = computeNodeTiers(data?.nodes || []);
+  const raw = data?.nodes || [];
+  // Tiers need an analysis run (PageRank). Without one, nobody is highlighted rather than an arbitrary top three.
+  const hasMetrics = raw.some((n) => n.pagerank != null);
+  const tiered = hasMetrics ? computeNodeTiers(raw) : raw.map((n) => ({ ...n, tier: 'neutral' as const }));
   const nodes = tiered
     .filter((n) => (!department || n.department === department) && (!community || String(n.community_id) === community))
     .map((n) => ({ ...n }));

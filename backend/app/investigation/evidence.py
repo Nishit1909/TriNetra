@@ -44,7 +44,7 @@ def profile(case_id: str, person_id: str):
         person["counts"] = conn.execute("""
             SELECT
               (SELECT count(*) FROM inv.communication_events WHERE case_id=%s
-                 AND communication_type='email' AND (source_person_id=%s OR target_person_id=%s)) AS emails,
+                 AND (source_person_id=%s OR target_person_id=%s)) AS emails,
               (SELECT count(*) FROM inv.colocation_events WHERE case_id=%s
                  AND (person_a=%s OR person_b=%s)) AS colocations,
               (SELECT count(DISTINCT document_id) FROM inv.document_mentions WHERE case_id=%s
@@ -90,7 +90,7 @@ def pair_evidence(case_id: str, a: str, b: str, limit: int = Query(50, ge=1, le=
             ORDER BY person_a,person_b""", params).fetchall()
         emails = _page(conn, """SELECT * FROM inv.communication_events
             WHERE case_id=%s AND LEAST(source_person_id,target_person_id)=%s
-              AND GREATEST(source_person_id,target_person_id)=%s AND communication_type='email'
+              AND GREATEST(source_person_id,target_person_id)=%s
             ORDER BY sent_at NULLS LAST,communication_id""", params, limit, offset)
         colocations = _page(conn, """
             SELECT c.*,to_jsonb(p) AS place,to_jsonb(sa) AS stop_a,to_jsonb(sb) AS stop_b

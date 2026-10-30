@@ -55,6 +55,16 @@ describe('filterGraph', () => {
   });
 });
 
+describe('no analysis run', () => {
+  it('highlights nobody when PageRank is missing', () => {
+    const noRun = {
+      nodes: [node('a', { pagerank: null }), node('b', { pagerank: null }), node('c', { pagerank: null })],
+      edges: [],
+    } as unknown as GraphResponse;
+    expect(filterGraph(noRun, '', '').nodes.every((n) => n.tier === 'neutral')).toBe(true);
+  });
+});
+
 describe('colours', () => {
   it('distinguishes string community IDs instead of colouring every group alike', () => {
     expect(nodeColor(data.nodes[0])).not.toBe(nodeColor(data.nodes[1]));

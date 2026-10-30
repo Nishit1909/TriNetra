@@ -59,6 +59,7 @@ export default function App() {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [needLogin, setNeedLogin] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
   const hadSession = useRef(false);
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [analysisVersion, setAnalysisVersion] = useState(0);
@@ -73,7 +74,8 @@ export default function App() {
 
   const loadSession = async () => {
     try {
-      const [me, casesRes] = await Promise.all([api.getMe(), api.getCases()]);
+      const me = await api.getMe();          // establishes the session first; unauthenticated users stop here
+      const casesRes = await api.getCases();
       setAuthMe(me);
       setAllCases(casesRes);
       setSessionError(null);
@@ -93,6 +95,8 @@ export default function App() {
       } else {
         setSessionError(err?.message || 'The backend could not be reached.');
       }
+    } finally {
+      setSessionChecked(true);
     }
   };
 
@@ -134,7 +138,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!activeCaseId) return;
+    if (!activeCaseId || !authMe) return;
     api
       .getPersons(activeCaseId, { limit: 100 })
       .then((res) => {
@@ -143,7 +147,7 @@ export default function App() {
         setPersonsMap(m);
       })
       .catch(() => null);
-  }, [activeCaseId]);
+  }, [activeCaseId, authMe]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -208,6 +212,13 @@ export default function App() {
 
   if (needLogin) {
     return <LoginPage onSignedIn={handleSignedIn} notice={loginNotice} />;
+  }
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen bg-[#05070d] grid place-items-center text-sm text-slate-400" role="status">
+        Connecting to the investigation workspace…
+      </div>
+    );
   }
 
   return (

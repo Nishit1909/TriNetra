@@ -153,8 +153,11 @@ export const UploadView: React.FC<UploadViewProps> = ({
     if (!createdCaseId) return;
     setRunningAnalysis(true);
     try {
-      await api.runAnalysis(createdCaseId, 'observed_only');
-      onToast(`Analysis completed for ${createdCaseId}`, 'emerald');
+      // Run both modes so the case is ready whichever view the investigator picks.
+      const runs = [await api.runAnalysis(createdCaseId, 'observed_only'), await api.runAnalysis(createdCaseId, 'observed_plus_inferred')];
+      const bad = runs.find((r) => r.run.status !== 'completed');
+      if (bad) onToast(`Analysis ${bad.run.status}: ${bad.run.error || 'see run details'}`, bad.run.status === 'partial' ? 'amber' : 'crimson');
+      else onToast(`Analysis completed for ${createdCaseId}`, 'emerald');
       onCaseCreated(createdCaseId);
     } catch (err: any) {
       onToast(err?.message || 'Analysis failed', 'crimson');
@@ -288,7 +291,16 @@ export const UploadView: React.FC<UploadViewProps> = ({
         </div>
 
         {uploadMode === 'zip' ? (
-          <label className="block p-8 rounded-[18px] border-2 border-dashed border-white/[0.18] hover:border-[#22d3ee] bg-white/[0.03] text-center cursor-pointer transition">
+          <label
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const f = e.dataTransfer.files?.[0];
+              if (f && f.name.toLowerCase().endsWith('.zip')) setZipFile(f);
+              else onToast('Drop a .zip file here, or switch to Separate CSV Files.', 'amber');
+            }}
+            className="block p-8 rounded-[18px] border-2 border-dashed border-white/[0.18] hover:border-[#22d3ee] bg-white/[0.03] text-center cursor-pointer transition"
+          >
             <FileArchive className="w-8 h-8 text-[#22d3ee] mx-auto mb-2" />
             <div className="text-sm font-semibold text-white">
               {zipFile ? zipFile.name : 'Click or drop a .zip archive containing persons.csv & relationships.csv'}
@@ -310,6 +322,13 @@ export const UploadView: React.FC<UploadViewProps> = ({
             ].map((slot) => (
               <label
                 key={slot.label}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const f = e.dataTransfer.files?.[0];
+                  if (f && f.name.toLowerCase().endsWith('.csv')) slot.setter(f);
+                  else onToast('Drop a .csv file on this slot.', 'amber');
+                }}
                 className={`p-5 rounded-[16px] border-2 border-dashed text-center cursor-pointer transition ${
                   slot.file
                     ? 'border-emerald-400/50 bg-emerald-500/[0.06]'
@@ -369,15 +388,15 @@ export const UploadView: React.FC<UploadViewProps> = ({
           {report.counts && (
             <div className="grid grid-cols-3 gap-3 text-xs">
               <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-                <span className="text-slate-400 block">Validated Persons</span>
+                <span className="text-slate-400 block">{report.valid ? 'Validated' : 'Rows read'} persons</span>
                 <span className="font-mono text-lg font-bold text-white">{report.counts.persons}</span>
               </div>
               <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-                <span className="text-slate-400 block">Validated Relationships</span>
+                <span className="text-slate-400 block">{report.valid ? 'Validated' : 'Rows read'} relationships</span>
                 <span className="font-mono text-lg font-bold text-white">{report.counts.relationships}</span>
               </div>
               <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
-                <span className="text-slate-400 block">Validated Communications</span>
+                <span className="text-slate-400 block">{report.valid ? 'Validated' : 'Rows read'} communications</span>
                 <span className="font-mono text-lg font-bold text-white">{report.counts.communications}</span>
               </div>
             </div>

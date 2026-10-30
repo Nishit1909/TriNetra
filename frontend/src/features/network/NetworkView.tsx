@@ -291,6 +291,13 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
         </GlassCard>
       </div>
 
+      {data && !data.run_id && !loading && (
+        <div className="rounded-[14px] border border-amber-400/30 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-200">
+          No analysis has been run for this case in <strong>{mode === 'observed_only' ? 'Observed only' : 'Observed + inferred'}</strong> mode yet, so
+          nobody is highlighted and there are no suggested links. Use <strong>Run analysis</strong> at the top.
+        </div>
+      )}
+
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5">
         {/* Graph panel */}
         <GlassCard noPadding className="overflow-hidden flex flex-col">
