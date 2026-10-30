@@ -17,6 +17,27 @@ class Principal:
     user_id: str
     is_admin: bool = False
     local: bool = False
+    role: str = 'admin'          # viewer | investigator | admin (portal role from inv.app_users)
+    label: str = 'local'         # display name/email for the access log
+    is_demo: bool = False
+
+    @property
+    def can_edit(self):
+        return self.role in ('investigator', 'admin')
+
+
+DEMO_USER_HEADER = 'X-Demo-User'
+
+
+def _app_user(user_id):
+    """Portal role for a user, or None when the security tables or the user don't exist."""
+    try:
+        with connect() as conn:
+            return conn.execute('SELECT * FROM inv.app_users WHERE user_id=%s', (UUID(str(user_id)),)).fetchone()
+    except (HTTPException, ValueError):
+        raise
+    except Exception:
+        return None
 
 
 def validate_runtime_settings():
@@ -51,13 +72,30 @@ def get_principal(request: Request, credentials: HTTPAuthorizationCredentials | 
             raise HTTPException(503, 'Production requires authentication.')
         if request.client is None or request.client.host not in {'127.0.0.1','::1','localhost','testclient'}:
             raise HTTPException(403, 'Unauthenticated development access is restricted to localhost.')
-        principal = Principal('local', is_admin=True, local=True)
+        demo = request.headers.get(DEMO_USER_HEADER)
+        if demo:
+            # Development-only role switch so the three portal views can be shown without real logins.
+            try:
+                user = _app_user(demo)
+            except ValueError:
+                raise HTTPException(401, 'Unknown demo user.')
+            if user is None or not user['active']:
+                raise HTTPException(401, 'Unknown or inactive demo user.')
+            principal = Principal(str(user['user_id']), is_admin=user['role'] == 'admin', local=False,
+                                  role=user['role'], label=user['email'], is_demo=user['is_demo'])
+        else:
+            principal = Principal('local', is_admin=True, local=True)
     else:
         if credentials is None or credentials.scheme.lower() != 'bearer':
             raise HTTPException(401, 'Access token required.', headers={'WWW-Authenticate':'Bearer'})
         identity = verify_supabase_token(credentials.credentials)
         admins = {v.strip() for v in settings.admin_user_ids.split(',') if v.strip()}
-        principal = Principal(identity, is_admin=identity in admins)
+        user = _app_user(identity)
+        if user is not None and not user['active']:
+            raise HTTPException(403, 'This account is disabled.')
+        role = 'admin' if identity in admins else (user['role'] if user else 'viewer')
+        principal = Principal(identity, is_admin=role == 'admin', role=role,
+                              label=user['email'] if user else identity, is_demo=bool(user and user['is_demo']))
     request.state.principal = principal
     return principal
 
@@ -74,6 +112,6 @@ def authorize_case(request: Request, principal: Principal = Depends(get_principa
             (case_id, UUID(principal.user_id))).fetchone()
     if member is None:
         raise HTTPException(403, 'You do not have access to this case.')
-    if request.method not in {'GET','HEAD','OPTIONS'} and member['access_level'] != 'editor':
+    if request.method not in {'GET','HEAD','OPTIONS'} and (member['access_level'] != 'editor' or not principal.can_edit):
         raise HTTPException(403, 'This case requires editor access.')
     return principal

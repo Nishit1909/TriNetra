@@ -1,16 +1,19 @@
 """The live API: scoped evidence, versioned model runs and bounded graphs."""
 from contextlib import asynccontextmanager
+import time
 import logging
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
+from app import audit
 from app.config import settings
 from app.db.neo4j import check_connectivity, close_driver
 from app.investigation.common import connect
-from app.investigation import analysis, cases, evidence, graph, reviews, uploads
+from app.investigation import admin, analysis, cases, evidence, graph, reviews, uploads
 from app.security import authorize_case, get_principal, validate_runtime_settings
 
 logger = logging.getLogger(__name__)
@@ -30,14 +33,22 @@ app.add_middleware(CORSMiddleware,
     allow_credentials=False, allow_methods=['GET','POST','OPTIONS'], allow_headers=['Authorization','Content-Type','Accept'])
 for router in (cases.router,evidence.router,analysis.router,graph.router,reviews.router):
     app.include_router(router, dependencies=[Depends(authorize_case)])
-app.include_router(uploads.router)   # creates new cases; checks its own principal (admin only)
+app.include_router(uploads.router)
+app.include_router(admin.router)       # admin portal; admin role only   # creates new cases; checks its own principal (admin only)
 
 
 @app.middleware('http')
 async def request_id(request: Request, call_next):
     request.state.request_id = str(uuid4())
+    started = time.monotonic()
     response = await call_next(request)
     response.headers['X-Request-ID'] = request.state.request_id
+    # Access log + alert rules, off the event loop. Failures are logged, never returned to the caller.
+    await run_in_threadpool(audit.record_request, request.method, request.url.path, request.url.query,
+        response.status_code, getattr(request.state, 'principal', None),
+        request.client.host if request.client else None, request.headers.get('user-agent'),
+        request.state.request_id, int((time.monotonic() - started) * 1000),
+        getattr(request.state, 'audit_action', None))
     return response
 
 
@@ -77,7 +88,24 @@ def readiness():
 
 @app.get('/api/auth/me', tags=['authentication'])
 def me(principal=Depends(get_principal)):
-    return {'user_id':principal.user_id,'is_admin':principal.is_admin,'local':principal.local}
+    """Who is calling, their portal role and which cases they can open (drives which view the UI shows)."""
+    cases = []
+    try:
+        with connect() as conn:
+            if principal.is_admin:
+                cases = [dict(r, access_level='admin') for r in conn.execute('SELECT case_id,name FROM inv.cases ORDER BY case_id').fetchall()]
+            else:
+                from uuid import UUID
+                cases = conn.execute("""SELECT c.case_id,c.name,m.access_level FROM inv.case_members m JOIN inv.cases c USING (case_id)
+                    WHERE m.user_id=%s ORDER BY c.case_id""", (UUID(principal.user_id),)).fetchall()
+    except HTTPException:
+        raise
+    except Exception:
+        cases = []
+    view = 'admin' if principal.is_admin else ('investigator' if principal.can_edit else 'viewer')
+    return {'user_id':principal.user_id,'label':principal.label,'role':principal.role,'view':view,
+            'is_admin':principal.is_admin,'can_edit':principal.can_edit,'local':principal.local,'is_demo':principal.is_demo,
+            'cases':[{k:(v if k!='access_level' or principal.can_edit or v!='editor' else 'viewer') for k,v in c.items()} for c in cases]}
 
 
 @app.post('/api/ingestion/upload', tags=['legacy'])

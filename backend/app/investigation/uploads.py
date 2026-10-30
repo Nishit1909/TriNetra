@@ -46,9 +46,9 @@ class UploadRejected(Exception):
 
 
 def _require_creator(principal):
-    # Creating a case is an admin action (local development counts as admin).
-    if not principal.is_admin:
-        raise HTTPException(403, "Only administrators can create cases from uploads.")
+    # Creating a case needs edit rights: investigators and admins (local development counts as admin).
+    if not (principal.is_admin or getattr(principal, "can_edit", False)):
+        raise HTTPException(403, "Only investigators and administrators can upload cases.")
 
 
 def _read_csv(name, raw, errors):

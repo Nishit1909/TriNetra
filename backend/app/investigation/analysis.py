@@ -382,6 +382,8 @@ def review_prediction(case_id: str, run_id: UUID, a: str, b: str, body: ReviewRe
     if principal is None:
         raise HTTPException(401,"Authentication required")
     actor = "local" if principal.local else principal.user_id
+    if body.status == "dismissed":
+        request.state.audit_action = "dismiss_lead"
     a,b = sorted((a,b))
     with connect() as conn:
         get_run(conn,case_id,run_id)

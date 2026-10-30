@@ -147,3 +147,33 @@ Do not set this DSN to the cloud investigation database. Tests create local fixt
 ## Model version and scores
 
 Analysis uses `analysis_model/weights/v1_2.json` (learned `hidden_link_ranker` + `tie_without_recorded_communication`). Scores rank pairs **within one method**; they are not probabilities and are not comparable across methods. The UI shows rank and `basis`, never "x% chance".
+
+## Security: three views, access log, alerts, e-mail
+
+Migration `db/migrations/005_security_audit.sql` (applied by `db/setup_database.py --apply`). Demo accounts: `python db/seed_demo_security.py --dsn ...` (all `is_demo`; remove with `--remove`).
+
+| Role | Can |
+|---|---|
+| `viewer` | Read assigned cases only. Any change → 403 |
+| `investigator` | Read assigned cases; run analysis, review leads, upload where `case_members.access_level = editor` |
+| `admin` | All cases + admin portal |
+
+`GET /api/auth/me` returns `view` (`viewer` / `investigator` / `admin`), `can_edit` and the cases the user can open; the UI picks its screens from this. Locally (`AUTH_ENABLED=false`, localhost only) send `X-Demo-User: <user_id>` to act as a demo user; with auth on, the Supabase user id is looked up in `inv.app_users`.
+
+**Access log:** every API request is recorded in `inv.access_log` (append-only: who, role, action, case, person, status, allowed, IP, time).
+
+**Alert rules** (raise `inv.security_alerts`, one per user/case/window, no spam):
+
+| Rule | Severity | When |
+|---|---|---|
+| `denied_access` | high | 401/403 on a case or action |
+| `conflict_of_interest` | high | the user's name or e-mail matches a subject or communication address in a case they open |
+| `bulk_viewing` | high | ≥ N distinct person profiles in M minutes (default 40 in 10) |
+| `after_hours` | medium | case access outside working hours / weekends (default 08–20 Asia/Kolkata) |
+| `sensitive_action` | low | upload, dismissed lead, export |
+
+Alerts are flags for an administrator to review, not findings about a person.
+
+**Admin portal endpoints** (`/api/admin`, admin only): `GET users`, `POST users`, `POST users/{id}` (role/active), `POST case-members`, `POST case-members/remove`, `GET access-log` (filters user/case/action/allowed/since/until), `GET access-summary?hours=24`, `GET alerts?status=&severity=&rule=`, `POST alerts/{id}/review`, `GET conflicts`, `GET settings`, `POST settings/alert-rules`, `POST settings/smtp`, `POST settings/smtp/test`.
+
+**E-mail:** configure SMTP in the portal (host, port, username, from, recipients, TLS, minimum severity). The password is only read from the `SMTP_PASSWORD` environment variable and is never stored or returned. Each alert records `email_status` (`sent` / `failed` / `disabled` / `below_threshold`).
