@@ -12,7 +12,8 @@ Priority: P0 = needed for the demo, P1 = strongly wanted, P2 = if time remains.
 
 | Path | What |
 |---|---|
-| `backend/` | Current backend (`backend_PoC`), `requirements.txt`, `.env.example`. Copy your real `.env` in; it's git-ignored |
+| *(backend code)* | **Not in this repo.** The backend owner keeps the app code; this repo holds data, database setup and the analysis model |
+| `analysis_model/` | `run_case_analysis` + `weights/v1_2.json` + model file; contract in `analysis_model/FACTORS.md` |
 | `db/migrations/001_case_scoped_schema.sql` | New Postgres schema `inv`; every key and foreign key carries `case_id`. Doesn't touch `public.*` |
 | `db/load_case.py` | Loads GAStech + derived layer + Caviar into `inv` (~20 s). See `db/README.md` |
 | `datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip` | Final validated GAStech case |
@@ -23,7 +24,7 @@ Priority: P0 = needed for the demo, P1 = strongly wanted, P2 = if time remains.
 
 **Load into Supabase** (from a laptop; use the *direct* or *session* connection string, not the transaction pooler on port 6543):
 ```bash
-pip install -r backend/requirements.txt
+pip install pandas numpy networkx "psycopg[binary]"
 python -c "import zipfile; zipfile.ZipFile('datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip').extractall('case')"
 python db/load_case.py --dsn "$SUPABASE_DATABASE_URL" --case-dir case --derived-dir derived --caviar-dir cases/caviar --migrate
 ```
@@ -105,7 +106,7 @@ def run_case_analysis(persons: pd.DataFrame,        # case_id, person_id, depart
 - **UI rule:** `hidden_link_ranker` scores rank pairs; they are **not probabilities**. Never display "x% chance"; show rank + signals. Surface any `warnings` entry about a ranker fallback.
 - Runtime needs only numpy, pandas, networkx (no scikit-learn/joblib for scoring).
 - For email pairs, pass `{"email_events", "direct_email_events"}` in `factors` (see `analysis_model/example_adapter.py`) so broadcast-only pairs carry no strength.
-- **Retire the old analytics** (`backend/app/analytics/`, including the Bitcoin-trained risk score and the GNN) from the request path, or mark it reference-only, so only one implementation runs.
+- **Retire the old analytics** (`app/analytics/` in the backend, including the Bitcoin-trained risk score and the GNN) from the request path, or mark it reference-only, so only one implementation runs.
 
 ## 7. Ingestion fixes (P1; only if new uploads are part of the demo)
 

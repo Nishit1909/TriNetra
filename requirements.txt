@@ -1,0 +1,8 @@
+# Data loading, analysis model and benchmarks (the app backend has its own requirements)
+pandas
+numpy
+networkx
+psycopg[binary]
+scikit-learn   # only for training/benchmark scripts; run_case_analysis scores the model with NumPy
+rdata          # only for reading the R benchmark files
+pytest
