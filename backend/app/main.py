@@ -106,7 +106,17 @@ def me(principal=Depends(get_principal)):
     except Exception:
         cases = []
     view = 'admin' if principal.is_admin else ('investigator' if principal.can_edit else 'viewer')
-    return {'user_id':principal.user_id,'label':principal.label,'role':principal.role,'view':view,
+    display_name = None
+    if not principal.local:
+        try:
+            with connect() as conn:
+                from uuid import UUID as _U
+                row = conn.execute('SELECT display_name FROM inv.app_users WHERE user_id=%s', (_U(principal.user_id),)).fetchone()
+                display_name = row['display_name'] if row else None
+        except Exception:
+            display_name = None
+    return {'user_id':principal.user_id,'label':principal.label,'display_name':display_name or principal.label,
+            'role':principal.role,'view':view,'login_required':settings.login_required,
             'is_admin':principal.is_admin,'can_edit':principal.can_edit,'local':principal.local,'is_demo':principal.is_demo,
             'cases':[{k:(v if k!='access_level' or principal.can_edit or v!='editor' else 'viewer') for k,v in c.items()} for c in cases]}
 

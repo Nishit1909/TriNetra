@@ -177,3 +177,21 @@ Alerts are flags for an administrator to review, not findings about a person.
 **Admin portal endpoints** (`/api/admin`, admin only): `GET users`, `POST users`, `POST users/{id}` (role/active), `POST case-members`, `POST case-members/remove`, `GET access-log` (filters user/case/action/allowed/since/until), `GET access-summary?hours=24`, `GET alerts?status=&severity=&rule=`, `POST alerts/{id}/review`, `GET conflicts`, `GET settings`, `POST settings/alert-rules`, `POST settings/smtp`, `POST settings/smtp/test`.
 
 **E-mail:** configure SMTP in the portal (host, port, username, from, recipients, TLS, minimum severity). The password is only read from the `SMTP_PASSWORD` environment variable and is never stored or returned. Each alert records `email_status` (`sent` / `failed` / `disabled` / `below_threshold`).
+
+## Sign-in (password login)
+
+Set `LOGIN_REQUIRED=true` in `backend/.env` to require a signed-in session for every API call (the demo header and local no-login access are then switched off). Migration `db/migrations/006_password_login.sql`; demo accounts and passwords come from `python db/seed_demo_security.py --dsn ...`.
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | demo.admin@sih26189.demo | Admin@Trace2026 |
+| Investigator | demo.investigator1@sih26189.demo | Investigator@2026 |
+| Viewer | demo.viewer@sih26189.demo | Viewer@Trace2026 |
+
+(Also seeded: demo.investigator2 / Arjun@Trace2026 and demo.coi / Kanon@Trace2026 for the conflict-of-interest demo.)
+
+- `POST /api/auth/login {email,password}` sets an HttpOnly, SameSite=Strict session cookie (8 h). `POST /api/auth/logout`, `POST /api/auth/password {current_password,new_password}`.
+- Passwords are scrypt-hashed; session tokens are stored only as SHA-256. Unknown e-mails and wrong passwords get the same answer.
+- 5 failed attempts per e-mail (or 30 per IP) in 15 minutes lock sign-in for that window; 3 and 5 failures raise `failed_login` alerts.
+- Cookie-authenticated writes must send `X-TRACE-CSRF: 1` (the frontend does this automatically).
+- Admin: `GET /api/admin/sessions`, `POST /api/admin/sessions/{id}/revoke`, `POST /api/admin/users/{id}/password`; deactivating a user or changing their role ends their sessions. Password hashes are never returned.

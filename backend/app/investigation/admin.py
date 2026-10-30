@@ -37,6 +37,7 @@ class UserIn(BaseModel):
     badge_number: str | None = Field(default=None, max_length=30)
     is_demo: bool = False
     user_id: UUID | None = None     # Supabase Auth user id when linking a real login
+    password: str | None = Field(default=None, max_length=200)   # initial password for password login
 
 
 class UserUpdate(BaseModel):
@@ -64,21 +65,29 @@ def list_users(p=Depends(require_admin)):
         by_user.setdefault(m["user_id"], []).append({"case_id": m["case_id"], "access_level": m["access_level"]})
     for u in users:
         u["cases"] = "all (admin)" if u["role"] == "admin" else by_user.get(u["user_id"], [])
-    return json_safe(users)
+    return json_safe([_public(u) for u in users])
 
 
 @router.post("/users")
 def create_user(body: UserIn, p=Depends(require_admin)):
+    from app.auth import hash_password, password_problems
+    pw_hash = None
+    if body.password:
+        problems = password_problems(body.password)
+        if problems:
+            raise HTTPException(422, "Password needs " + " and ".join(problems) + ".")
+        pw_hash = hash_password(body.password)
     with connect() as conn:
         try:
-            row = conn.execute("""INSERT INTO inv.app_users (user_id,email,display_name,role,phone,badge_number,is_demo)
-                VALUES (%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
-                (body.user_id or uuid4(), body.email.lower(), body.display_name, body.role, body.phone, body.badge_number, body.is_demo)).fetchone()
+            row = conn.execute("""INSERT INTO inv.app_users (user_id,email,display_name,role,phone,badge_number,is_demo,password_hash,password_changed_at)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CASE WHEN %s IS NULL THEN NULL ELSE now() END) RETURNING *""",
+                (body.user_id or uuid4(), body.email.lower(), body.display_name, body.role, body.phone, body.badge_number, body.is_demo,
+                 pw_hash, pw_hash)).fetchone()
         except Exception as exc:
             if "unique" in str(exc).lower():
                 raise HTTPException(409, "A user with this e-mail or id already exists.")
             raise
-    return json_safe(row)
+    return json_safe(_public(row))
 
 
 @router.post("/users/{user_id}")
@@ -92,9 +101,58 @@ def update_user(user_id: UUID, body: UserUpdate, p=Depends(require_admin)):
         raise HTTPException(422, "Nothing to update.")
     with connect() as conn:
         row = conn.execute(f"UPDATE inv.app_users SET {','.join(sets)} WHERE user_id=%s RETURNING *", (*vals, user_id)).fetchone()
+        if row is not None and (body.active is False or body.role is not None):
+            from app.auth import revoke_user_sessions
+            revoke_user_sessions(conn, user_id)   # role change or deactivation takes effect immediately
     if row is None:
         raise HTTPException(404, "User not found.")
-    return json_safe(row)
+    return json_safe(_public(row))
+
+
+class PasswordResetIn(BaseModel):
+    password: str = Field(min_length=1, max_length=200)
+
+
+@router.post("/users/{user_id}/password")
+def reset_password(user_id: UUID, body: PasswordResetIn, p=Depends(require_admin)):
+    """Admin sets a new password; the user's existing sessions are ended."""
+    from app.auth import hash_password, password_problems, revoke_user_sessions
+    problems = password_problems(body.password)
+    if problems:
+        raise HTTPException(422, "Password needs " + " and ".join(problems) + ".")
+    with connect() as conn:
+        row = conn.execute("UPDATE inv.app_users SET password_hash=%s, password_changed_at=now() WHERE user_id=%s RETURNING user_id",
+                           (hash_password(body.password), user_id)).fetchone()
+        if row is None:
+            raise HTTPException(404, "User not found.")
+        ended = revoke_user_sessions(conn, user_id)
+    return {"password_reset": True, "sessions_ended": ended}
+
+
+@router.get("/sessions")
+def list_sessions(p=Depends(require_admin)):
+    """Active sign-in sessions: who is signed in, since when, from where."""
+    with connect() as conn:
+        rows = conn.execute("""SELECT s.session_id,s.user_id,u.email,u.display_name,u.role,s.created_at,s.last_seen_at,s.expires_at,
+                s.client_ip,s.user_agent FROM inv.auth_sessions s JOIN inv.app_users u USING (user_id)
+            WHERE s.revoked_at IS NULL AND s.expires_at > now() ORDER BY s.last_seen_at DESC""").fetchall()
+    return json_safe(rows)
+
+
+@router.post("/sessions/{session_id}/revoke")
+def revoke_session(session_id: int, p=Depends(require_admin)):
+    with connect() as conn:
+        n = conn.execute("UPDATE inv.auth_sessions SET revoked_at=now() WHERE session_id=%s AND revoked_at IS NULL", (session_id,)).rowcount
+    if not n:
+        raise HTTPException(404, "Active session not found.")
+    return {"revoked": True}
+
+
+def _public(row):
+    """Never return password hashes."""
+    row = dict(row)
+    row["has_password"] = bool(row.pop("password_hash", None))
+    return row
 
 
 @router.post("/case-members")

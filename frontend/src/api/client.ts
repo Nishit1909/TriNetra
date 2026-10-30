@@ -23,6 +23,7 @@ import type {
   GraphResponse,
   HealthResponse,
   InferredRelationship,
+  LoginResponse,
   PaginatedResponse,
   PairEvidenceResponse,
   PersonExplainResponse,
@@ -100,6 +101,8 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   if (!(options.body instanceof FormData) && options.body !== undefined && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
+  // Writes carry the CSRF header the backend requires for cookie sessions.
+  if (method !== 'GET' && method !== 'HEAD') headers.set('X-TRACE-CSRF', '1');
   if (currentBearerToken) headers.set('Authorization', `Bearer ${currentBearerToken}`);
   else if (DEMO_ALLOWED && currentDemoUserId) headers.set('X-Demo-User', currentDemoUserId);
 
@@ -107,7 +110,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const timer = setTimeout(() => controller.abort(), method === 'GET' ? READ_TIMEOUT_MS : WRITE_TIMEOUT_MS);
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
+    res = await fetch(`${API_BASE}${path}`, { credentials: 'include', ...options, headers, signal: controller.signal });
   } catch (err) {
     const timedOut = err instanceof DOMException && err.name === 'AbortError';
     throw new ApiError(0, timedOut ? 'The backend took too long to respond.' : 'The backend could not be reached.');
@@ -121,6 +124,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     payload = text ? JSON.parse(text) : null;
   } catch {
     payload = { detail: text || res.statusText };
+  }
+  if (res.status === 401 && path !== '/api/auth/login' && typeof window !== 'undefined') {
+    // Session missing or expired: the shell shows the sign-in page.
+    window.dispatchEvent(new CustomEvent('trace:unauthorized'));
   }
   if (!res.ok) {
     const detail = (payload as { detail?: unknown } | null)?.detail;
@@ -137,6 +144,14 @@ export const api = {
   getHealth: () => request<HealthResponse>('/health'),
   getDatabaseHealth: () => request<DatabaseHealthResponse>('/health/database'),
   getMe: () => request<AuthMeResponse>('/api/auth/me'),
+  login: (email: string, password: string) => request<LoginResponse>('/api/auth/login', json({ email, password })),
+  logout: () => request<{ signed_out: boolean }>('/api/auth/logout', { method: 'POST' }),
+  changePassword: (current_password: string, new_password: string) =>
+    request<{ changed: boolean; signed_out: boolean }>('/api/auth/password', json({ current_password, new_password })),
+  resetUserPassword: (userId: string, password: string) =>
+    request<{ password_reset: boolean; sessions_ended: number }>(`/api/admin/users/${enc(userId)}/password`, json({ password })),
+  getAdminSessions: () => request<Record<string, any>[]>('/api/admin/sessions'),
+  revokeAdminSession: (sessionId: number) => request<{ revoked: boolean }>(`/api/admin/sessions/${sessionId}/revoke`, { method: 'POST' }),
 
   getCases: () => request<CaseRecord[]>('/api/cases'),
   getCaseSummary: (caseId: string) => request<CaseSummaryResponse>(`${casePath(caseId)}/summary`),

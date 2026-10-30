@@ -34,7 +34,17 @@ export interface AuthMeResponse {
   can_edit: boolean;
   local: boolean;
   is_demo: boolean;
+  display_name?: string;
+  login_required?: boolean;
   cases: AuthCaseAccess[];
+}
+
+export interface LoginResponse {
+  signed_in: boolean;
+  expires_at: string;
+  role: PortalRole;
+  label: string;
+  display_name: string;
 }
 
 export interface CaseRecord {

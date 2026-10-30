@@ -27,7 +27,11 @@ The Vite dev server runs at `http://localhost:5173` and proxies `/api` and `/hea
 - `VITE_PUBLIC_API_BASE`: only for a separately hosted frontend; leave empty to use the dev proxy.
 - There is **no offline or fallback data**. Every value comes from the backend; if it is unreachable the app shows a "Backend unavailable" banner with a retry, never stand-in results.
 
-## Demo Role Switcher (`X-Demo-User`)
+## Sign-in
+
+With `LOGIN_REQUIRED=true` on the backend the app opens on a login page. Demo accounts: **Admin** demo.admin@sih26189.demo / Admin@Trace2026 · **Investigator** demo.investigator1@sih26189.demo / Investigator@2026 · **Viewer** demo.viewer@sih26189.demo / Viewer@Trace2026. Sign out from the user menu (top right).
+
+## Demo Role Switcher (`X-Demo-User`, only when login is off)
 Use the top-right user menu to switch between the 5 seeded demo accounts:
 1. **Demo Admin (Cyber Cell)** (`00000000-0000-4000-a000-000000000001`) — Full access + Admin Portal
 2. **Demo Insp. Kavya Rao** (`00000000-0000-4000-a000-000000000002`) — Investigator (Editor on VAST GAStech & Noordin)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
   Share2,
@@ -15,7 +15,8 @@ import {
   Search,
   X,
 } from 'lucide-react';
-import { api, getDemoUserId, setDemoUserId } from './api/client';
+import { api, ApiError, getDemoUserId, setDemoUserId } from './api/client';
+import { LoginPage } from './features/auth/LoginPage';
 import { DEMO_USERS } from './api/demoUsers';
 import { AnalysisMode, AuthMeResponse, CaseRecord, PersonRecord } from './api/types';
 import { GlassBadge, GlassButton, GlassCard, GlassInput, GlassSelect } from './components/glass';
@@ -57,6 +58,9 @@ export default function App() {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [sessionError, setSessionError] = useState<string | null>(null);
+  const [needLogin, setNeedLogin] = useState(false);
+  const hadSession = useRef(false);
+  const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [analysisVersion, setAnalysisVersion] = useState(0);
 
   const addToast = (message: string, tone: ToastItem['tone'] = 'cyan') => {
@@ -73,6 +77,7 @@ export default function App() {
       setAuthMe(me);
       setAllCases(casesRes);
       setSessionError(null);
+      hadSession.current = true;
       if (me.cases.length > 0 && !me.cases.some((c) => c.case_id === activeCaseId)) {
         setActiveCaseId(me.cases[0].case_id);
       }
@@ -82,8 +87,46 @@ export default function App() {
     } catch (err: any) {
       setAuthMe(null);
       setAllCases([]);
-      setSessionError(err?.message || 'The backend could not be reached.');
+      if (err instanceof ApiError && err.status === 401) {
+        setNeedLogin(true);
+        setSessionError(null);
+      } else {
+        setSessionError(err?.message || 'The backend could not be reached.');
+      }
     }
+  };
+
+  useEffect(() => {
+    const onUnauthorized = () => {
+      // Only call it an ended session if someone was actually signed in; a first visit just shows the form.
+      if (hadSession.current) setLoginNotice('Your session has ended. Please sign in again.');
+      hadSession.current = false;
+      setNeedLogin(true);
+    };
+    window.addEventListener('trace:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('trace:unauthorized', onUnauthorized);
+  }, []);
+
+  const handleSignedIn = async () => {
+    setNeedLogin(false);
+    setLoginNotice(null);
+    setSelectedPersonId(null);
+    await loadSession();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await api.logout();
+    } catch {
+      // Already signed out or backend down: show the sign-in page anyway.
+    }
+    hadSession.current = false;
+    setShowUserMenu(false);
+    setAuthMe(null);
+    setAllCases([]);
+    setSelectedPersonId(null);
+    setLoginNotice('You have been signed out.');
+    setNeedLogin(true);
   };
 
   useEffect(() => {
@@ -159,7 +202,13 @@ export default function App() {
   ];
 
   const activeDemoObj = DEMO_USERS.find((u) => u.user_id === getDemoUserId());
-  const identityName = activeDemoObj?.display_name || (authMe ? (authMe.local ? 'Local developer' : authMe.label) : 'Not connected');
+  const identityName = authMe?.login_required
+    ? authMe.display_name || authMe.label
+    : activeDemoObj?.display_name || (authMe ? (authMe.local ? 'Local developer' : authMe.display_name || authMe.label) : 'Not connected');
+
+  if (needLogin) {
+    return <LoginPage onSignedIn={handleSignedIn} notice={loginNotice} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#05070d] text-slate-100 flex relative overflow-hidden">
@@ -349,7 +398,26 @@ export default function App() {
                 </div>
               </button>
 
-              {showUserMenu && (
+              {showUserMenu && authMe?.login_required && (
+                <div className="absolute right-0 mt-2 w-72 rounded-[18px] bg-[#080d1a]/95 backdrop-blur-2xl border border-white/[0.16] shadow-glass p-4 space-y-3 z-50">
+                  <div>
+                    <div className="text-sm font-semibold text-white">{authMe.display_name || authMe.label}</div>
+                    <div className="text-xs text-slate-400">{authMe.label}</div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <GlassBadge tone={authMe.role === 'admin' ? 'crimson' : authMe.role === 'investigator' ? 'cyan' : 'slate'}>{authMe.role}</GlassBadge>
+                    {authMe.is_demo && <GlassBadge tone="amber">demo account</GlassBadge>}
+                    <GlassBadge>{authMe.cases.length} case{authMe.cases.length === 1 ? '' : 's'}</GlassBadge>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full rounded-[12px] border border-white/15 bg-white/[0.06] hover:bg-white/[0.12] py-2 text-sm text-white"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              )}
+              {showUserMenu && !authMe?.login_required && (
                 <div className="absolute right-0 mt-2 w-80 rounded-[18px] bg-[#080d1a]/95 backdrop-blur-2xl border border-white/[0.16] shadow-glass p-3 space-y-2 z-50">
                   <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                     Demo Role Switcher (X-Demo-User Header)
