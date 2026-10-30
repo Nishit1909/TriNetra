@@ -22,7 +22,7 @@ import { api } from '../../api/client';
 import type { AnalysisMode, GraphEdge, GraphNode, GraphResponse, PersonRecord } from '../../api/types';
 import { GlassBadge, GlassButton, GlassCard, GlassSkeleton } from '../../components/glass';
 import { formatNumber, methodLabel, tierMeta } from '../../utils/format';
-import { displayColor, EDGE_COLORS, edgeColor, endpoint, filterGraph, nodeRadius, pulse } from './graph-utils';
+import { displayColor, EDGE_COLORS, edgeColor, endpoint, filterGraph, freshLayout, nodeRadius, pulse } from './graph-utils';
 import type { GraphCommand } from './SpatialGraph';
 import { forceX, forceY } from 'd3-force-3d';
 
@@ -161,6 +161,8 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
   }, [search, caseId]);
 
   const gd = useMemo(() => filterGraph(data, department, community), [data, department, community]);
+  // the 2D view gets its own copy; the 3D view makes its own inside SpatialGraph
+  const gd2d = useMemo(() => freshLayout(gd), [gd, view]);
   const ranking = useMemo(() => [...gd.nodes].sort((a, b) => (b.pagerank || 0) - (a.pagerank || 0)), [gd]);
   const byId = useMemo(() => new Map(gd.nodes.map((n) => [n.id, n])), [gd]);
   const chosen = byId.get(selected);
@@ -207,7 +209,10 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
 
   function select(n: GraphNode) {
     setSelected(n.id);
-    if (view === '2d') graph2d.current?.centerAt(n.x || 0, n.y || 0, reducedMotion ? 0 : 350);
+    if (view === '2d') {
+      const p = gd2d.nodes.find((x) => x.id === n.id) as GraphNode | undefined;   // the 2D copy holds the positions
+      graph2d.current?.centerAt(p?.x || 0, p?.y || 0, reducedMotion ? 0 : 350);
+    }
     if (view === '3d') setCommand((c) => ({ type: 'focus', id: c.id + 1, nodeId: n.id }));
   }
 
@@ -516,7 +521,7 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
                 ref={graph2d}
                 width={size.width}
                 height={size.height}
-                graphData={gd}
+                graphData={gd2d}
                 backgroundColor="#070b14"
                 autoPauseRedraw={reducedMotion}
                 nodeLabel={() => ''}

@@ -3,7 +3,7 @@ import ForceGraph3D, { type ForceGraphMethods } from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
 import { DoubleSide, Group, Mesh, MeshBasicMaterial, RingGeometry, SphereGeometry, type Material, type Object3D } from 'three';
 import type { GraphEdge, GraphNode } from '../../api/types';
-import { displayColor, edgeColor, pulse } from './graph-utils';
+import { displayColor, edgeColor, freshLayout, pulse } from './graph-utils';
 import { tierMeta } from '../../utils/format';
 import { forceX, forceY, forceZ } from 'd3-force-3d';
 
@@ -46,7 +46,7 @@ export default function SpatialGraph({ data, width, height, selected, labels, re
 
   // Fresh copies: the simulation mutates positions and link endpoints.
   const graphData = useMemo(
-    () => ({ nodes: data.nodes.map((n) => ({ ...n })), links: data.links.map((e) => ({ ...e })) }),
+    () => freshLayout(data),
     [data],
   );
 

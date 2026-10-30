@@ -68,3 +68,17 @@ export function filterGraph(
 
 /** Smooth 0..1 pulse used by the blinking key / secondary figures (period in ms). */
 export const pulse = (t: number, period: number) => 0.5 - 0.5 * Math.cos((2 * Math.PI * (t % period)) / period);
+
+
+/** Fresh copy for a force simulation: drops positions from any previous view and turns link ends back into ids,
+ *  so switching 3D -> 2D -> 3D never reuses the other view's layout or node objects. */
+export function freshLayout<N extends { id: string }, L extends { source: any; target: any }>(d: { nodes: N[]; links: L[] }) {
+  const id = (v: any) => (typeof v === 'object' && v !== null ? v.id : v);
+  return {
+    nodes: d.nodes.map((n) => {
+      const { x, y, z, vx, vy, vz, fx, fy, fz, ...rest } = n as any;
+      return rest as N;
+    }),
+    links: d.links.map((e) => ({ ...e, source: id(e.source), target: id(e.target) })),
+  };
+}
