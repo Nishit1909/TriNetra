@@ -41,7 +41,7 @@ Open `http://127.0.0.1:8000/docs`. Health checks: `/health` (process), `/health/
 | `analysis_model/` at repo root | Model teammate's pure function, factor definitions and weights |
 | `db/migrations/` |21 core tables plus review/audit and membership extensions |
 
-The old global routers, fuzzy-name uploader and financial-risk/GNN request path are not mounted. Legacy upload returns410. Reference modules remain available for comparison; their optional dependencies are in `requirements-reference.txt`. New arbitrary file uploads are outside this preloaded demo flow.
+The old global routers, fuzzy-name uploader and financial-risk/GNN request path are not mounted. Legacy upload returns 410 and points to `/api/case-uploads`. Reference modules remain available for comparison; their optional dependencies are in `requirements-reference.txt`. Uploads go through `/api/case-uploads`: validated, size-limited, one transaction, always a new case. `/health/database` returns 200 `degraded` when only Neo4j is down (graphs fall back to PostgreSQL), 503 when PostgreSQL is down.
 
 ## Frontend API contract
 
@@ -65,6 +65,9 @@ All data routes use **text case IDs**: `CASE_VAST_GASTECH`, `CASE_CAVIAR`, `CASE
 | `GET .../analysis/{run}/predicted_links?method=&basis=&person_id=&limit=&offset=` | Paged suggestions for one method or basis |
 | `GET .../analysis/compare?run_a=&run_b=` | What changes between two runs (rank movers, hub/community changes, links only in one run) |
 | `GET .../persons/{person}/explain?run_id=` (or `mode=`, latest run) | Plain reasons for a person's position: ranks, group, hub flag, strongest ties, suggestions |
+| `GET /api/case-uploads/template` | Required/optional columns, rules and an example, for the upload screen |
+| `POST /api/case-uploads/validate` | Dry run: multipart `file` (ZIP) or `persons`+`relationships`(+`communications`) CSVs → `{valid,errors,warnings,counts}`; writes nothing |
+| `POST /api/case-uploads` | Same files + `name` (+`description`,`role`,`is_synthetic`) → creates a **new** case `CASE_UPLOAD_...`; 422 with the report if invalid (nothing saved). Admin only. No automatic identity merging |
 | `GET .../graph` | Bounded, case-scoped display graph; does not run analysis. With `run_id`, mode comes from the run. Predicted edges carry `basis` and get their own share of `edge_limit` |
 | `POST .../predicted_links/{run}/{a}/{b}/review` | confirmed/dismissed plus reason; verified actor retained |
 | `POST .../document_mentions/{id}/review` | confirmed/rejected plus optional reason |

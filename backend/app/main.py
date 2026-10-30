@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings
 from app.db.neo4j import check_connectivity, close_driver
 from app.investigation.common import connect
-from app.investigation import analysis, cases, evidence, graph, reviews
+from app.investigation import analysis, cases, evidence, graph, reviews, uploads
 from app.security import authorize_case, get_principal, validate_runtime_settings
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ app.add_middleware(CORSMiddleware,
     allow_credentials=False, allow_methods=['GET','POST','OPTIONS'], allow_headers=['Authorization','Content-Type','Accept'])
 for router in (cases.router,evidence.router,analysis.router,graph.router,reviews.router):
     app.include_router(router, dependencies=[Depends(authorize_case)])
+app.include_router(uploads.router)   # creates new cases; checks its own principal (admin only)
 
 
 @app.middleware('http')
@@ -66,8 +67,12 @@ def readiness():
         checks['neo4j'] = 'ok'
     except Exception:
         checks['neo4j'] = 'unavailable'
-    code = 200 if all(value=='ok' for value in checks.values()) else 503
-    return JSONResponse(status_code=code,content={'status':'ok' if code==200 else 'degraded','databases':checks})
+    # PostgreSQL is required; Neo4j is optional (the graph falls back to PostgreSQL), so its outage is
+    # reported as 'degraded' with 200 rather than failing readiness.
+    code = 200 if checks['postgresql'] == 'ok' else 503
+    status = 'ok' if all(v == 'ok' for v in checks.values()) else ('degraded' if code == 200 else 'unavailable')
+    return JSONResponse(status_code=code,content={'status':status,'databases':checks,
+        'notes':[] if checks['neo4j'] == 'ok' else ['Neo4j unavailable: graphs are served from PostgreSQL.']})
 
 
 @app.get('/api/auth/me', tags=['authentication'])
@@ -77,4 +82,4 @@ def me(principal=Depends(get_principal)):
 
 @app.post('/api/ingestion/upload', tags=['legacy'])
 def retired_upload(principal=Depends(get_principal)):
-    raise HTTPException(410,'Legacy upload is retired. Use the validated case loader; fuzzy identity merging is disabled in the live API.')
+    raise HTTPException(410,'Legacy upload is retired. Use POST /api/case-uploads (validated, creates a new case, no automatic identity merging).')

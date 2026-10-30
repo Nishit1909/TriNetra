@@ -87,17 +87,27 @@ def compact_graph(nodes, edges, metrics, include, mode, limit, edge_limit, focus
     selected = ordered[:limit]
     selected_ids = set(selected)
     visible = [edge for edge in valid if edge["source"] in selected_ids and edge["target"] in selected_ids]
-    # Prediction scores aren't on the same scale as evidence strength (or each other), so predicted
-    # edges get their own budget, evidence-based first, each ordered by score within its method.
+    # Strengths of different kinds aren't on one scale (prediction scores are rankings within a method),
+    # so inferred and predicted edges get reserved shares of edge_limit instead of competing with
+    # observed strength. Unused share flows back to the others.
     tie = lambda edge:(edge["source"],edge["target"],edge["kind"],edge["type"],edge["id"])
-    real = sorted((e for e in visible if e["kind"] != "predicted"),key=lambda e:(-float(e["weight"]),*tie(e)))
-    pred = sorted((e for e in visible if e["kind"] == "predicted"),
-                  key=lambda e:(METHOD_ORDER.index(e["type"]) if e["type"] in METHOD_ORDER else 99,-float(e["weight"]),*tie(e)))
-    pred_budget = min(len(pred),max(1,edge_limit//3)) if pred else 0
-    visible = real[:edge_limit-pred_budget] + pred[:pred_budget]
-    visible = visible + pred[pred_budget:edge_limit-len(visible)] if len(visible) < edge_limit else visible
+    groups = {
+        "observed": sorted((e for e in visible if e["kind"] == "observed"),key=lambda e:(-float(e["weight"]),*tie(e))),
+        "inferred": sorted((e for e in visible if e["kind"] == "inferred"),key=lambda e:(-float(e["weight"]),*tie(e))),
+        "predicted": sorted((e for e in visible if e["kind"] == "predicted"),
+                            key=lambda e:(METHOD_ORDER.index(e["type"]) if e["type"] in METHOD_ORDER else 99,-float(e["weight"]),*tie(e))),
+    }
+    share = {"inferred":edge_limit//4,"predicted":edge_limit//3}
+    take = {k:min(len(groups[k]),max(1,share[k]) if groups[k] else 0) for k in share}
+    take["observed"] = min(len(groups["observed"]),edge_limit-sum(take.values()))
+    spare = edge_limit-sum(take.values())
+    for k in ("observed","inferred","predicted"):
+        extra = min(spare,len(groups[k])-take[k])
+        take[k] += extra; spare -= extra
+    visible = groups["observed"][:take["observed"]]+groups["inferred"][:take["inferred"]]+groups["predicted"][:take["predicted"]]
     return {"nodes":[by_id[pid] for pid in selected],"edges":visible,
             "counts":{"total_nodes":len(by_id),"total_edges":len(valid),"shown_nodes":len(selected),"shown_edges":len(visible)},
+            "shown_by_kind":{k:sum(1 for e in visible if e["kind"]==k) for k in ("observed","inferred","predicted")},
             "truncated":len(selected)<len(by_id) or len(visible)<len(valid)}
 
 
@@ -166,5 +176,6 @@ def graph(case_id: str, run_id: UUID | None = None,
                 basis = METHOD_BASIS.get(row["method"],("structural_pattern",""))[0]
                 edges.append({**row,"kind":"predicted","type":row["method"],"basis":basis,"lead_strength":None})
     result = compact_graph(nodes,edges,metrics,kinds,mode,limit,edge_limit,focus)
-    result.update({"case_id":case_id,"run_id":run_id,"mode":mode,"graph_source":source,"warnings":warnings})
+    result.update({"case_id":case_id,"run_id":run_id,"mode":mode,"graph_source":source,
+                   "warnings":list(dict.fromkeys(warnings))})
     return json_safe(result)

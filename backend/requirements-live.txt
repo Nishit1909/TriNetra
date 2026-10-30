@@ -9,4 +9,5 @@ networkx
 scipy
 httpx
 python-dotenv
+python-multipart
 # Optional genuine Leiden: install igraph and leidenalg. The model reports its fallback.
