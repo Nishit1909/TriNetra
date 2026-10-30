@@ -1,0 +1,42 @@
+.graph-toolbar {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--c-line);
+  border: 1px solid var(--c-line-strong);
+}
+
+.gt-btn {
+  background: var(--c-surface);
+  color: var(--c-text-dim);
+  border: none;
+  font-family: var(--f-ui);
+  font-size: var(--fs-3);
+  padding: var(--sp-2) var(--sp-3);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
+}
+
+.gt-btn--wide {
+  min-width: 108px;
+}
+
+.gt-btn:hover {
+  background: var(--c-surface-raised);
+  color: var(--c-text);
+}
+
+.gt-btn--active {
+  color: var(--c-signal);
+}
+
+.gt-btn:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--c-signal);
+  outline-offset: -2px;
+}

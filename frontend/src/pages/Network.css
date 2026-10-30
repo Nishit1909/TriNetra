@@ -1,0 +1,36 @@
+.network-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  height: 100%;
+}
+
+.network-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.network-stats {
+  font-size: var(--fs-2);
+}
+
+.network-stats-flag {
+  color: var(--c-red);
+}
+
+.network-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: var(--sp-4);
+}
+
+.network-graph-wrap {
+  position: relative;
+  height: 100%;
+  width: 100%;
+}

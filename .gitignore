@@ -1,3 +1,11 @@
 __pycache__/
 *.py[cod]
 case-input/
+.env
+*.env
+!.env.example
+venv/
+.venv/
+node_modules/
+dist/
+.pytest_cache/
