@@ -116,7 +116,15 @@ def send_email(smtp, subject, body):
 def _email_alert(alert_id):
     try:
         with connect() as conn:
-            alert = conn.execute("SELECT * FROM inv.security_alerts WHERE alert_id=%s", (alert_id,)).fetchone()
+            alert = None
+            for _ in range(25):   # the alert is committed by the caller's transaction; wait for it to be visible
+                alert = conn.execute("SELECT * FROM inv.security_alerts WHERE alert_id=%s", (alert_id,)).fetchone()
+                if alert:
+                    break
+                conn.commit()
+                time.sleep(0.2)
+            if alert is None:
+                return
             smtp = get_setting(conn, "smtp", DEFAULT_SMTP)
         if not smtp["enabled"]:
             status, error = "disabled", None

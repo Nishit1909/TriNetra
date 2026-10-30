@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 from fastapi.responses import JSONResponse
 
-from app import audit
+from app import audit, auth
 from app.config import settings
 from app.db.neo4j import check_connectivity, close_driver
 from app.investigation.common import connect
@@ -30,9 +30,10 @@ app = FastAPI(title='SIH26189 Investigation API', version='2.0.0', lifespan=life
     description='Case-scoped source evidence and versioned analysis. Scores are investigative leads, not criminality probabilities.')
 app.add_middleware(CORSMiddleware,
     allow_origins=[origin.strip().rstrip('/') for origin in settings.cors_origins.split(',') if origin.strip()],
-    allow_credentials=False, allow_methods=['GET','POST','OPTIONS'], allow_headers=['Authorization','Content-Type','Accept'])
+    allow_credentials=True, allow_methods=['GET','POST','OPTIONS'], allow_headers=['Authorization','Content-Type','Accept','X-TRACE-CSRF'])
 for router in (cases.router,evidence.router,analysis.router,graph.router,reviews.router):
     app.include_router(router, dependencies=[Depends(authorize_case)])
+app.include_router(auth.router)        # password login, logout, password change
 app.include_router(uploads.router)
 app.include_router(admin.router)       # admin portal; admin role only   # creates new cases; checks its own principal (admin only)
 

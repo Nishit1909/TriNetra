@@ -15,6 +15,9 @@ class Settings(BaseSettings):
     app_env: str = "development"
     auth_enabled: bool = False
     admin_user_ids: str = ""
+    # When true, every API call needs a signed-in session (password login); the demo header and the
+    # local no-login developer access are switched off.
+    login_required: bool = False
 
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parents[1] / '.env'),

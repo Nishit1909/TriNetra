@@ -66,7 +66,26 @@ def verify_supabase_token(token):
     return identity
 
 
+def _principal_from_user(user) -> 'Principal':
+    return Principal(str(user['user_id']), is_admin=user['role'] == 'admin', local=False,
+                     role=user['role'], label=user['email'], is_demo=user['is_demo'])
+
+
 def get_principal(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(bearer)):
+    from app.auth import CSRF_HEADER, SESSION_COOKIE, session_user
+    token = request.cookies.get(SESSION_COOKIE)
+    if token:
+        user = session_user(token)
+        if user is None:
+            raise HTTPException(401, 'Your session has expired. Please sign in again.')
+        # Cookie-authenticated writes must carry the CSRF header (cross-site forms cannot set it).
+        if request.method not in {'GET', 'HEAD', 'OPTIONS'} and request.headers.get(CSRF_HEADER) != '1':
+            raise HTTPException(403, 'Missing CSRF header.')
+        principal = _principal_from_user(user)
+        request.state.principal = principal
+        return principal
+    if settings.login_required and not settings.auth_enabled:
+        raise HTTPException(401, 'Sign in required.')
     if not settings.auth_enabled:
         if settings.app_env.lower() == 'production':
             raise HTTPException(503, 'Production requires authentication.')
