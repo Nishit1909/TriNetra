@@ -241,6 +241,7 @@ export interface PairEvidenceResponse {
   observed_relationships: any[];
   inferred_relationships: InferredRelationship[];
   emails: PaginatedResponse<any>;
+  transfers?: PaginatedResponse<any>;
   colocation_events: PaginatedResponse<any>;
   uncertainty: {
     person_attribution: string | null;
@@ -366,6 +367,11 @@ export interface ValidationReport {
     persons: number;
     relationships: number;
     communications: number;
+    locations?: number;
+    places?: number;
+    meetings?: number;
+    inferred_links?: number;
+    transactions?: number;
   };
   relationship_types?: string[];
   sha256?: string;

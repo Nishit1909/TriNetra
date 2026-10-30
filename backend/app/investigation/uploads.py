@@ -14,6 +14,8 @@ import re
 import uuid
 import zipfile
 from starlette.concurrency import run_in_threadpool
+
+from . import locations
 from typing import Literal
 
 import pandas as pd
@@ -28,7 +30,7 @@ MAX_UPLOAD_BYTES = 25 * 1024 * 1024          # compressed upload
 MAX_UNCOMPRESSED_BYTES = 150 * 1024 * 1024   # sum of CSVs after unzip
 MAX_FILES_IN_ZIP = 20
 # Sized for the analysis model on a 1 GB server (centrality/betweenness grow fast with network size).
-MAX_ROWS = {"persons": 5_000, "relationships": 100_000, "communications": 300_000}
+MAX_ROWS = {"persons": 5_000, "relationships": 100_000, "communications": 300_000, "locations": 100_000, "transactions": 200_000}
 MAX_ERRORS = 50
 BROADCAST_RECIPIENTS = 10                   # same rule as the derived GAStech layer
 ID_RE = re.compile(r"^[A-Za-z0-9_.:\-]{1,64}$")
@@ -39,7 +41,11 @@ SPEC = {
     "relationships": {"required": ["person_a", "person_b", "relationship_type"], "optional": ["weight", "evidence_count"]},
     "communications": {"required": ["source_person_id", "target_person_id"],
                        "optional": ["communication_id", "sent_at", "subject", "recipient_count", "communication_type"]},
+    "locations": locations.SPEC,
+    "transactions": {"required": ["from_person_id", "to_person_id", "amount"],
+                     "optional": ["transaction_id", "occurred_at", "method", "reference"]},
 }
+TRANSFER_METHODS = {"upi", "bank", "cash", "card", "wallet", "crypto", "other"}
 
 
 class UploadRejected(Exception):
@@ -96,7 +102,7 @@ def collect_files(uploads):
                         raise HTTPException(422, f"{base}: size does not match the ZIP header.")
                     files[key] = data
                 elif base.lower().endswith(".csv"):
-                    errors.append(f"{base}: not a recognised file name (use persons.csv, relationships.csv, communications.csv); ignored.")
+                    errors.append(f"{base}: not a recognised file name (use persons.csv, relationships.csv, communications.csv, locations.csv, transactions.csv); ignored.")
         else:
             total += len(raw)
             key = name.rsplit("/", 1)[-1].lower().removesuffix(".csv")
@@ -117,7 +123,7 @@ def validate_case_files(files):
         if len(errors) < MAX_ERRORS:
             errors.append(msg)
 
-    for name in ("persons", "relationships"):
+    for name in ("persons", "relationships", "communications"):
         if name not in files:
             err(f"{name}.csv is required.")
     for name, raw in files.items():
@@ -246,8 +252,9 @@ def validate_case_files(files):
         if len(comm):
             # Communications (e-mails, calls, messages) become one COMMUNICATIONS relationship per pair so the model sees
             # them as communication. Pairs that already have a communication-type relationship row are not duplicated.
-            pairs = comm.assign(a=comm[["source_person_id", "target_person_id"]].min(axis=1),
-                                b=comm[["source_person_id", "target_person_id"]].max(axis=1)).groupby(["a", "b"]).size()
+            direct = comm[~comm.is_broadcast]        # broadcasts add no relationship strength
+            pairs = direct.assign(a=direct[["source_person_id", "target_person_id"]].min(axis=1),
+                                  b=direct[["source_person_id", "target_person_id"]].max(axis=1)).groupby(["a", "b"]).size()
             comm_types = {"EMAILED", "INTERCEPTED_COMMUNICATION", "COMMUNICATIONS"}
             have = {tuple(sorted((x, y))) for x, y, t in zip(rel.person_a, rel.person_b, rel.relationship_type)
                     if str(t).upper() in comm_types} if len(rel) else set()
@@ -258,17 +265,125 @@ def validate_case_files(files):
             if comm.is_broadcast.any():
                 warnings.append(f"{int(comm.is_broadcast.sum())} message(s) went to {BROADCAST_RECIPIENTS}+ recipients and are treated as broadcasts (no relationship strength).")
 
+    # ---- transactions (optional): money transfers -> one BUSINESS&FINANCE tie per pair (a non-communication tie,
+    # so "pays but never calls" pairs surface as evidence leads)
+    tx = None
+    if "transactions" in tables:
+        t = tables["transactions"].copy()
+        for col in SPEC["transactions"]["optional"]:
+            if col not in t.columns:
+                t[col] = None
+        rows, seen_tx = [], set()
+        for i, row in t.iterrows():
+            line = i + 2
+            f, to = row.from_person_id, row.to_person_id
+            if f not in ids or to not in ids:
+                err(f"transactions.csv line {line}: person {f if f not in ids else to!r} is not in persons.csv.")
+                continue
+            if f == to:
+                err(f"transactions.csv line {line}: payer and payee are the same person.")
+                continue
+            try:
+                amt = round(float(str(row.amount).replace(",", "")), 2)
+                if not (amt > 0) or amt > 1e12:
+                    raise ValueError
+            except (TypeError, ValueError):
+                err(f"transactions.csv line {line}: amount must be a positive number.")
+                continue
+            tid = row.transaction_id if isinstance(row.transaction_id, str) and row.transaction_id else f"T{i + 1:07d}"
+            if not ID_RE.match(tid) or tid in seen_tx:
+                err(f"transactions.csv line {line}: transaction_id {tid!r} is invalid or repeated.")
+                continue
+            seen_tx.add(tid)
+            when = None
+            if isinstance(row.occurred_at, str) and row.occurred_at:
+                when = pd.to_datetime(row.occurred_at, errors="coerce")
+                if pd.isna(when):
+                    err(f"transactions.csv line {line}: occurred_at {row.occurred_at!r} is not a date/time.")
+                    continue
+                when = (when.tz_convert(None) if when.tzinfo else when).to_pydatetime()
+            method = row.method.strip().lower() if isinstance(row.method, str) and row.method.strip() else "other"
+            if method not in TRANSFER_METHODS:
+                method = "other"
+            rows.append({"transaction_id": tid, "from_person_id": f, "to_person_id": to, "amount": amt, "occurred_at": when,
+                         "method": method, "reference": row.reference[:200] if isinstance(row.reference, str) else None,
+                         "source_row": line})
+        tx = pd.DataFrame(rows)
+        if len(tx):
+            tp = tx.assign(a=tx[["from_person_id", "to_person_id"]].min(axis=1),
+                           b=tx[["from_person_id", "to_person_id"]].max(axis=1)).groupby(["a", "b"]).size()
+            have = {tuple(sorted((x, y))) for x, y, ty in zip(rel.person_a, rel.person_b, rel.relationship_type)
+                    if str(ty).upper() == "BUSINESS&FINANCE"} if len(rel) else set()
+            add = [(a, b, "BUSINESS&FINANCE", float(n), int(n)) for (a, b), n in tp.items() if (a, b) not in have]
+            if add:
+                rel = pd.concat([rel, pd.DataFrame(add, columns=rel.columns)], ignore_index=True)
+                warnings.append(f"Transactions: {len(tx)} transfer(s) between {len(tp)} pair(s); {len(add)} added as BUSINESS&FINANCE ties.")
+
+    # ---- locations (optional): places -> meetings -> inferred links
+    loc = None
+    if "locations" in tables:
+        points = locations.validate(tables["locations"].copy(), ids, err, warnings)
+        if points is not None and not errors:
+            places, meet, inferred, place_of = locations.build(points, p)
+            import json as _json
+            from .analysis import WEIGHTS_PATH
+            inferred = locations.score(inferred, _json.loads(WEIGHTS_PATH.read_bytes()))
+            loc = {"points": points, "places": places, "meetings": meet, "inferred": inferred, "place_of": place_of}
+            n_private = sum(1 for r in inferred if r["relationship_type"] == "MET_PRIVATELY")
+            warnings.append(f"Locations: {len(points)} point(s) grouped into {len(places)} place(s); {len(meet)} meeting(s) found; "
+                            f"{n_private} pair(s) met privately. These are INFERRED links, shown separately from recorded evidence.")
+            if (points.source == "cell_tower").any():
+                warnings.append("Some locations are cell-tower based: a tower covers a wide area, so those meetings are marked low precision.")
+    elif "persons" in tables:
+        warnings.append("No locations.csv: meeting detection (people at the same place at the same time) is off for this case.")
+
     report = {
         "valid": not errors, "errors": errors, "warnings": warnings,
         "counts": {"persons": int(len(p)), "relationships": int(len(rel)),
-                   "communications": int(len(comm)) if comm is not None else 0},
+                   "communications": int(len(comm)) if comm is not None else 0,
+                   "locations": int(len(loc["points"])) if loc else 0,
+                   "places": len(loc["places"]) if loc else 0,
+                   "meetings": int(len(loc["meetings"])) if loc else 0,
+                   "inferred_links": len(loc["inferred"]) if loc else 0,
+                   "transactions": int(len(tx)) if tx is not None else 0},
         "relationship_types": sorted(rel.relationship_type.unique().tolist()) if len(rel) else [],
     }
     if len(errors) >= MAX_ERRORS:
         report["errors_truncated"] = True
     if errors:
         return None, report
-    return {"persons": p, "relationships": rel, "communications": comm}, report
+    return {"persons": p, "relationships": rel, "communications": comm, "locations": loc, "transactions": tx}, report
+
+
+def _write_locations(conn, case_id, loc):
+    from psycopg.types.json import Jsonb
+    place_of = {}
+    with conn.cursor() as cur:
+        with cur.copy("COPY inv.places (case_id,place_id,latitude,longitude,stops,vehicles,place_type,home_of_assigned_persons) FROM STDIN") as cp:
+            for pl in loc["places"]:
+                cp.write_row((case_id, pl["place_id"], pl["latitude"], pl["longitude"], pl["points"], len(pl["people"]),
+                              pl["place_type"], pl["label"]))
+        for pl in loc["places"]:
+            place_of[pl["place_id"]] = pl
+        pts = loc["points"]
+        with cur.copy("COPY inv.location_points (case_id,point_id,person_id,observed_at,latitude,longitude,place_id,place_name,source,source_row) FROM STDIN") as cp:
+            for r in pts.itertuples(index=False):
+                cp.write_row((case_id, r.point_id, r.person_id, r.observed_at, r.latitude, r.longitude, loc["place_of"].get(r.point_id),
+                              r.place_name, r.source, r.source_row))
+        if len(loc["meetings"]):
+            with cur.copy("""COPY inv.location_meetings (case_id,meeting_id,person_a,person_b,place_id,place_label,place_type,start_at,end_at,
+                             after_hours,people_present,low_precision,point_a,point_b) FROM STDIN""") as cp:
+                for m in loc["meetings"].itertuples(index=False):
+                    cp.write_row((case_id, m.meeting_id, m.person_a, m.person_b, m.place_id, m.place_label, m.place_type,
+                                  m.start_at.to_pydatetime() if hasattr(m.start_at, "to_pydatetime") else m.start_at,
+                                  m.end_at.to_pydatetime() if hasattr(m.end_at, "to_pydatetime") else m.end_at,
+                                  bool(m.after_hours), int(m.people_present), bool(m.low_precision), m.point_a, m.point_b))
+    for r in loc["inferred"]:
+        conn.execute("""INSERT INTO inv.inferred_relationships (case_id,person_a,person_b,relationship_type,person_attribution,lead_strength,
+                        lead_level,factors,possible_innocent_explanations,supporting_colocation_ids,email_ids,relationship_key)
+                        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
+                     (case_id, r["person_a"], r["person_b"], r["relationship_type"], "uploaded_location_as_given", r["lead_strength"],
+                      r["lead_level"], Jsonb(r["factors"]), r["innocent"], r["meeting_ids"], [], f"{r['person_a']}|{r['person_b']}"))
 
 
 def _slug(text):
@@ -296,21 +411,32 @@ def _write(conn, case_id, name, description, role, is_synthetic, source, tables,
                         cp.write_row((case_id, row.communication_id, row.source_person_id, row.target_person_id, row.communication_type,
                                       row.sent_at, row.time_known, row.subject, row.recipient_count, row.is_broadcast,
                                       "communications.csv", row.source_row, "upload"))
+        tx = tables.get("transactions")
+        if tx is not None and len(tx):
+            with conn.cursor() as cur:
+                with cur.copy("""COPY inv.money_transfers (case_id,transaction_id,from_person_id,to_person_id,amount,occurred_at,method,
+                                 reference,source_row) FROM STDIN""") as cp:
+                    for r in tx.itertuples(index=False):
+                        cp.write_row((case_id, r.transaction_id, r.from_person_id, r.to_person_id, r.amount,
+                                      None if pd.isna(r.occurred_at) else r.occurred_at, r.method, r.reference, r.source_row))
+        loc = tables.get("locations")
+        if loc:
+            _write_locations(conn, case_id, loc)
         if not principal.local:
             conn.execute("""INSERT INTO inv.case_members (case_id,user_id,access_level) VALUES (%s,%s,'editor')
                             ON CONFLICT DO NOTHING""", (case_id, uuid.UUID(principal.user_id)))
 
 
-async def _gather(file, persons, relationships, communications):
+async def _gather(file, persons, relationships, communications, locations_file=None, transactions_file=None):
     named, raws = [], []
-    for field, f in (("file", file), ("persons", persons), ("relationships", relationships), ("communications", communications)):
+    for field, f in (("file", file), ("persons", persons), ("relationships", relationships), ("communications", communications), ("locations", locations_file), ("transactions", transactions_file)):
         if f is None:
             continue
         raw = await f.read(MAX_UPLOAD_BYTES + 1)
         raws.append(raw)
         named.append(((f.filename or "upload.zip") if field == "file" else f"{field}.csv", raw))
     if not named:
-        raise HTTPException(422, "Send a ZIP as 'file', or CSVs as 'persons' and 'relationships' (and optionally 'communications').")
+        raise HTTPException(422, "Send a ZIP as 'file', or CSVs as 'persons', 'relationships' and 'communications' (optionally 'locations' and 'transactions').")
     return named, hashlib.sha256(b"".join(raws)).hexdigest()
 
 
@@ -319,13 +445,17 @@ def upload_template():
     """What to upload. The frontend can show this as help text."""
     return {
         "files": {k: {"required_columns": v["required"], "optional_columns": v["optional"],
-                      "required_file": k != "communications"} for k, v in SPEC.items()},
-        "how": "Upload one ZIP containing persons.csv and relationships.csv (communications.csv optional), or the CSVs separately.",
+                      "required_file": k in ("persons", "relationships", "communications")} for k, v in SPEC.items()},
+        "how": "Upload one ZIP containing persons.csv, relationships.csv and communications.csv (locations.csv and transactions.csv optional), or the CSVs separately.",
         "rules": [
             "Each upload creates a new case; existing cases are never changed.",
             "person_id must be unique. People are never merged automatically, even with the same name.",
             "relationship_type examples: MEETINGS, FRIENDSHIP, KINSHIP, OPERATIONS, LOGISTICS, EMAILED, INTERCEPTED_COMMUNICATION.",
             f"Messages with {BROADCAST_RECIPIENTS}+ recipients count as broadcasts and add no relationship strength.",
+            "locations.csv: who was where and when (GPS, cell tower, CCTV, witness). People at the same place within 30 minutes count as a meeting; "
+            "repeated private or after-hours meetings become INFERRED links. source = gps | cell_tower | cctv | witness | other.",
+            "transactions.csv: money transfers between people (method = upi | bank | cash | card | wallet | crypto | other). "
+            "Each paying pair gets a BUSINESS&FINANCE tie, so people who pay each other but never communicate show up as leads.",
             f"Limits: {MAX_UPLOAD_BYTES // (1024 * 1024)} MB upload, {MAX_UNCOMPRESSED_BYTES // (1024 * 1024)} MB unzipped, "
             f"{MAX_ROWS['persons']:,} people, {MAX_ROWS['relationships']:,} relationships.",
         ],
@@ -333,6 +463,8 @@ def upload_template():
             "persons.csv": "person_id,display_name,department\nP1,Asha Rao,Finance\nP2,Vikram Shetty,Security",
             "relationships.csv": "person_a,person_b,relationship_type,weight\nP1,P2,MEETINGS,1",
             "communications.csv": "source_person_id,target_person_id,sent_at,subject,recipient_count\nP1,P2,2026-01-05 10:30,Site visit,1",
+            "transactions.csv": "from_person_id,to_person_id,amount,occurred_at,method,reference\nP1,P2,45000,2026-01-07 11:00,upi,consultancy",
+            "locations.csv": "person_id,observed_at,latitude,longitude,place_name,source\nP1,2026-01-06 22:10,12.2958,76.6394,Lakeview Lodge,gps\nP2,2026-01-06 22:25,12.2959,76.6395,,cell_tower",
         },
     }
 
@@ -341,10 +473,12 @@ def upload_template():
 async def validate_upload(request: Request,
                           file: UploadFile | None = File(None), persons: UploadFile | None = File(None),
                           relationships: UploadFile | None = File(None), communications: UploadFile | None = File(None),
+                          locations_csv: UploadFile | None = File(None, alias="locations"),
+                          transactions_csv: UploadFile | None = File(None, alias="transactions"),
                           principal=Depends(get_principal)):
     """Dry run: checks the files and returns the report. Writes nothing."""
     _require_creator(principal)
-    named, digest = await _gather(file, persons, relationships, communications)
+    named, digest = await _gather(file, persons, relationships, communications, locations_csv, transactions_csv)
     return await run_in_threadpool(_validate_sync, named, digest)   # parsing is CPU work: keep the event loop free
 
 
@@ -364,10 +498,12 @@ async def create_case_from_upload(request: Request,
                                   is_synthetic: bool = Form(False),
                                   file: UploadFile | None = File(None), persons: UploadFile | None = File(None),
                                   relationships: UploadFile | None = File(None), communications: UploadFile | None = File(None),
+                                  locations_csv: UploadFile | None = File(None, alias="locations"),
+                                  transactions_csv: UploadFile | None = File(None, alias="transactions"),
                                   principal=Depends(get_principal)):
     """Validate, then create a NEW case. On any validation error nothing is written and the report is returned (422)."""
     _require_creator(principal)
-    named, digest = await _gather(file, persons, relationships, communications)
+    named, digest = await _gather(file, persons, relationships, communications, locations_csv, transactions_csv)
     return await run_in_threadpool(_create_sync, named, digest, name, description, role, is_synthetic, principal)
 
 

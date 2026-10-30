@@ -2,7 +2,7 @@
 import csv, random, zipfile, io, os
 random.seed(2026)
 import pathlib
-OUT = str(pathlib.Path(__file__).resolve().parent / 'generated')
+OUT = str(pathlib.Path(__file__).resolve().parent)
 people = [
  # id, name, department (cell/role in the fictional story)
  ("OM01","Rakesh Venkat","Finance"),        # hidden coordinator: meets many, emails few
@@ -80,15 +80,42 @@ comms.append((f"MSG{cid+2:04d}","OM01","OM16",ts(19,23,5),"tomorrow",1))
 def write(path, header, rows):
     with open(path,"w",newline="",encoding="utf-8") as f:
         w=csv.writer(f); w.writerow(header); w.writerows(rows)
-good=os.path.join(OUT,"monsoon_ledger"); os.makedirs(good,exist_ok=True)
+good=os.path.join(OUT,"monsoon_ledger_csv"); os.makedirs(good,exist_ok=True)
 write(f"{good}/persons.csv",["person_id","display_name","department","job_title"],[(i,n,d,"") for i,n,d in people])
 write(f"{good}/relationships.csv",["person_a","person_b","relationship_type","weight","evidence_count"],[(a,b,t,w,1) for a,b,t,w in rels])
 write(f"{good}/communications.csv",["communication_id","source_person_id","target_person_id","sent_at","subject","recipient_count"],comms)
+
+# ---- locations: everyone at the port office on working days (busy, daytime = routine) ...
+OFFICE=(12.86900,74.84200); LODGE=(12.91310,74.85590); GODOWN=(12.84470,74.83010)
+def jitter(pt): return (round(pt[0]+random.uniform(-0.0003,0.0003),6), round(pt[1]+random.uniform(-0.0003,0.0003),6))
+locs=[]
+for day in range(1,21):
+    for i in ids:
+        if dept[i] in ("External Supplier",) or random.random()<0.25: continue
+        la,lo=jitter(OFFICE); locs.append((i,ts(day,random.randint(9,16),random.randint(0,59)),la,lo,"Port Office","gps"))
+# ... PLANTED: auditor Pooja Agarwal (OM28) and accountant Lakshmi Iyer (OM09) meet at a riverside godown late at night,
+# four times, and never call or e-mail each other. Only the location data reveals this.
+for day,h in [(3,22),(8,23),(14,22),(19,21)]:
+    for i,mm in (("OM28",random.randint(0,10)),("OM09",random.randint(12,25))):
+        la,lo=jitter(GODOWN); locs.append((i,ts(day,h,mm),la,lo,"Riverside Godown","gps" if i=="OM28" else "cell_tower"))
+# coordinator OM01 and bridge OM16 at a lodge twice (they do have recorded ties)
+for day in (6,17):
+    for i,mm in (("OM01",5),("OM16",20)):
+        la,lo=jitter(LODGE); locs.append((i,ts(day,21,mm),la,lo,"Lakeview Lodge","gps"))
+write(f"{good}/locations.csv",["person_id","observed_at","latitude","longitude","place_name","source"],locs)
+
+# ---- transactions: supplier pays the customs bridge; the bridge pays the auditor (no recorded communication between them)
+tx=[]
+for k,(day,amt) in enumerate([(2,150000),(9,175000),(16,160000)]): tx.append((f"TX{k+1:03d}","OM25","OM16",amt,ts(day,11,15),"upi","consultancy fee"))
+for k,(day,amt) in enumerate([(4,200000),(15,250000)]): tx.append((f"TX{k+10:03d}","OM16","OM28",amt,ts(day,13,0),"cash","loan"))
+tx += [("TX020","OM02","OM09",4500,ts(5,10,0),"bank","reimbursement"),("TX021","OM10","OM27",62000,ts(12,15,30),"bank","invoice 4471")]
+write(f"{good}/transactions.csv",["transaction_id","from_person_id","to_person_id","amount","occurred_at","method","reference"],tx)
+
 with zipfile.ZipFile(f"{OUT}/monsoon_ledger_case.zip","w",zipfile.ZIP_DEFLATED) as z:
-    for fn in ["persons.csv","relationships.csv","communications.csv"]: z.write(f"{good}/{fn}",fn)
+    for fn in ["persons.csv","relationships.csv","communications.csv","locations.csv","transactions.csv"]: z.write(f"{good}/{fn}",fn)
 
 # deliberately broken copy for testing validation errors
-bad=os.path.join(OUT,"monsoon_ledger_broken"); os.makedirs(bad,exist_ok=True)
+import tempfile; bad=tempfile.mkdtemp()
 bp=[(i,n,d,"") for i,n,d in people]+[("OM05","Duplicate Meena","Logistics","")]     # duplicate ID
 write(f"{bad}/persons.csv",["person_id","display_name","department","job_title"],bp)
 br=[(a,b,t,w,1) for a,b,t,w in rels[:20]]+[("OM03","OM99","MEETINGS",1,1),("OM07","OM07","OPERATIONS",1,1),("OM08","OM09","FRIENDSHIP",-2,1)]
@@ -97,4 +124,4 @@ write(f"{bad}/communications.csv",["communication_id","source_person_id","target
       comms[:10]+[("MSGBAD1","OM01","OM02","not-a-date","x",1)])
 with zipfile.ZipFile(f"{OUT}/monsoon_ledger_BROKEN.zip","w",zipfile.ZIP_DEFLATED) as z:
     for fn in ["persons.csv","relationships.csv","communications.csv"]: z.write(f"{bad}/{fn}",fn)
-print(len(people),"people",len(rels),"relationships",len(comms),"communications")
+print(len(people),"people",len(rels),"relationships",len(comms),"communications",len(locs),"locations",len(tx),"transactions")

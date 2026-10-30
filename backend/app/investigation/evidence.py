@@ -46,10 +46,12 @@ def profile(case_id: str, person_id: str):
               (SELECT count(*) FROM inv.communication_events WHERE case_id=%s
                  AND (source_person_id=%s OR target_person_id=%s)) AS emails,
               (SELECT count(*) FROM inv.colocation_events WHERE case_id=%s
+                 AND (person_a=%s OR person_b=%s))
+              + (SELECT count(*) FROM inv.location_meetings WHERE case_id=%s
                  AND (person_a=%s OR person_b=%s)) AS colocations,
               (SELECT count(DISTINCT document_id) FROM inv.document_mentions WHERE case_id=%s
                  AND upper(entity_type)='PERSON' AND entity_id=%s AND review_status<>'rejected') AS documents
-        """, (case_id, person_id, person_id, case_id, person_id, person_id, case_id, person_id)).fetchone()
+        """, (case_id, person_id, person_id, case_id, person_id, person_id, case_id, person_id, person_id, case_id, person_id)).fetchone()
         return json_safe(person)
 
 
@@ -102,11 +104,32 @@ def pair_evidence(case_id: str, a: str, b: str, limit: int = Query(50, ge=1, le=
               AND GREATEST(c.person_a,c.person_b)=%s
             ORDER BY c.overlap_start,c.colocation_id
         """, params, limit, offset)
+        uploaded = False
+        if not colocations["total"]:      # uploaded cases: meetings from locations.csv, in the same shape
+            meetings = _page(conn, """
+                SELECT m.meeting_id AS colocation_id, m.place_id, m.place_type, m.place_label, m.start_at AS overlap_start,
+                       m.end_at AS overlap_end, round(extract(epoch FROM (m.end_at - m.start_at)) / 60.0) AS minutes_apart,
+                       m.after_hours, m.people_present >= 3 AS group_gathering, m.people_present, m.low_precision,
+                       'location' AS source, to_jsonb(p) AS place
+                FROM inv.location_meetings m
+                JOIN inv.places p ON p.case_id=m.case_id AND p.place_id=m.place_id
+                WHERE m.case_id=%s AND m.person_a=%s AND m.person_b=%s
+                ORDER BY m.start_at,m.meeting_id""", params, limit, offset)
+            if meetings["total"]:
+                colocations, uploaded = meetings, True
+        if uploaded:
+            unc = {"person_attribution": "uploaded_location_as_given",
+                   "note": "Locations are as uploaded. Being at the same place at the same time shows presence, not interaction; "
+                           "cell-tower points cover a wide area."}
+        else:
+            unc = {"person_attribution": "assigned_driver_assumed" if inferred or colocations["total"] else None,
+                   "note": "Vehicle assignment does not prove who was driving. Coded ties do not imply available email headers."}
+        transfers = _page(conn, """SELECT * FROM inv.money_transfers
+            WHERE case_id=%s AND LEAST(from_person_id,to_person_id)=%s AND GREATEST(from_person_id,to_person_id)=%s
+            ORDER BY occurred_at NULLS LAST,transaction_id""", params, limit, offset)
         return json_safe({"case_id": case_id, "person_a": a, "person_b": b,
                           "observed_relationships": observed, "inferred_relationships": inferred,
-                          "emails": emails, "colocation_events": colocations,
-                          "uncertainty": {"person_attribution": "assigned_driver_assumed" if inferred or colocations["total"] else None,
-                                          "note": "Vehicle assignment does not prove who was driving. Coded ties do not imply available email headers."}})
+                          "emails": emails, "colocation_events": colocations, "transfers": transfers, "uncertainty": unc})
 
 
 @router.get("/leads")
@@ -171,10 +194,14 @@ def summary(case_id: str):
         case = require_case(case_id, conn)
         counts = {}
         for table in ("persons", "vehicles", "communication_events", "relationships", "inferred_relationships",
-                      "colocation_events", "places", "documents", "document_mentions", "transactions"):
+                      "colocation_events", "places", "documents", "document_mentions", "transactions", "location_meetings", "location_points"):
             counts[table] = conn.execute("SELECT count(*) AS count FROM inv." + table + " WHERE case_id=%s", (case_id,)).fetchone()["count"]
+        counts["transactions"] += conn.execute("SELECT count(*) AS count FROM inv.money_transfers WHERE case_id=%s", (case_id,)).fetchone()["count"]
+        counts["colocation_events"] += counts.pop("location_meetings")      # meetings from uploaded locations count as co-locations
+        has_uploaded_locations = counts.pop("location_points") > 0
         latest = conn.execute("""SELECT * FROM inv.analysis_runs WHERE case_id=%s
             ORDER BY started_at DESC,analysis_run_id DESC LIMIT 1""", (case_id,)).fetchone()
         return json_safe({"case": case, "counts": counts, "latest_analysis": latest,
-                          "uncertainty": {"vehicle_person_attribution": "assigned_driver_assumed",
+                          "uncertainty": {"vehicle_person_attribution": "uploaded_location_as_given" if has_uploaded_locations
+                                          else ("assigned_driver_assumed" if counts["vehicles"] else "not_applicable"),
                                           "card_ownership": "unknown", "source_timezone": "unknown"}})

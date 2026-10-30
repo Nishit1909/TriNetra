@@ -10,6 +10,7 @@ import {
   Clock,
   ShieldCheck,
   History,
+  Banknote,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import { PairEvidenceResponse, PersonRecord, PredictedLink } from '../../api/types';
@@ -275,12 +276,12 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                       <Car className="w-4 h-4 text-[#a78bfa]" />
-                      Inferred Co-location Events ({evidence?.colocation_events?.total ?? 0})
+                      Inferred Meetings: Same Place, Same Time ({evidence?.colocation_events?.total ?? 0})
                     </h3>
                     <GlassBadge tone="violet">Assigned driver assumed</GlassBadge>
                   </div>
                   {!evidence?.colocation_events?.items?.length ? (
-                    <p className="text-xs text-slate-400">No vehicle GPS co-location events recorded for this pair.</p>
+                    <p className="text-xs text-slate-400">No co-location (same place, same time) events recorded for this pair.</p>
                   ) : (
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {evidence.colocation_events.items.map((co: any) => (
@@ -290,10 +291,10 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-mono font-semibold text-violet-300">
-                              {co.place_id} ({co.place_type})
+                              {co.place_label || co.place_id} ({String(co.place_type).replace(/_/g, ' ')})
                             </span>
                             <span className="font-mono text-[11px] text-slate-400">
-                              {co.overlap_min} min overlap
+                              {co.source === 'location' ? `${co.minutes_apart} min apart` : `${co.overlap_min} min overlap`}
                             </span>
                           </div>
                           <div className="text-[11px] text-slate-300 font-mono">
@@ -302,10 +303,13 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                           <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {co.after_hours && <GlassBadge tone="amber">After hours</GlassBadge>}
                             {co.group_gathering && (
-                              <GlassBadge tone="slate">Group ({co.vehicles_present} vehicles)</GlassBadge>
+                              <GlassBadge tone="slate">
+                                Group ({co.source === 'location' ? `${co.people_present} people` : `${co.vehicles_present} vehicles`})
+                              </GlassBadge>
                             )}
+                            {co.low_precision && <GlassBadge tone="slate">Cell tower: low precision</GlassBadge>}
                             <span className="text-[10px] font-mono text-slate-400">
-                              Cars: {co.vehicle_id_a} & {co.vehicle_id_b}
+                              {co.source === 'location' ? 'From uploaded locations' : `Cars: ${co.vehicle_id_a} & ${co.vehicle_id_b}`}
                             </span>
                           </div>
                         </div>
@@ -317,11 +321,11 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                 <GlassCard className="p-4 space-y-3">
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                     <Mail className="w-4 h-4 text-[#22d3ee]" />
-                    Recorded Emails ({evidence?.emails?.total ?? 0})
+                    Recorded Communications ({evidence?.emails?.total ?? 0})
                   </h3>
                   {!evidence?.emails?.items?.length ? (
                     <p className="text-xs text-slate-400">
-                      No recorded direct email communication between these two people.
+                      No recorded calls, e-mails or messages between these two people.
                     </p>
                   ) : (
                     <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -330,7 +334,12 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                           key={em.communication_id}
                           className="p-2.5 rounded-[12px] bg-white/[0.04] border border-white/[0.08] text-xs space-y-1"
                         >
-                          <div className="font-medium text-white">{em.subject || '(No subject)'}</div>
+                          <div className="font-medium text-white">
+                            {em.subject || '(No subject)'}
+                            {em.communication_type && em.communication_type !== 'email' && (
+                              <span className="ml-2 text-[10px] uppercase font-mono text-cyan-300">{em.communication_type}</span>
+                            )}
+                          </div>
                           <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
                             <span>
                               {em.source_person_id} → {em.target_person_id}
@@ -343,6 +352,32 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
                   )}
                 </GlassCard>
               </div>
+
+              {evidence?.transfers && evidence.transfers.total > 0 && (
+                <GlassCard className="p-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <Banknote className="w-4 h-4 text-emerald-400" />
+                    Money Transfers ({evidence.transfers.total}) · ₹
+                    {evidence.transfers!.items.reduce((t: number, x: any) => t + Number(x.amount), 0).toLocaleString('en-IN')}
+                  </h3>
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {evidence.transfers!.items.map((tx: any) => (
+                      <div key={tx.transaction_id}
+                        className="p-2.5 rounded-[12px] bg-white/[0.04] border border-white/[0.08] text-xs flex items-center justify-between gap-3">
+                        <span className="font-mono text-slate-300">
+                          {tx.from_person_id} → {tx.to_person_id}
+                          <span className="ml-2 uppercase text-[10px] text-emerald-300">{tx.method}</span>
+                          {tx.reference && <span className="ml-2 text-slate-400">{tx.reference}</span>}
+                        </span>
+                        <span className="font-mono text-white">
+                          ₹{Number(tx.amount).toLocaleString('en-IN')}
+                          {tx.occurred_at && <span className="ml-2 text-slate-400">{formatIST(tx.occurred_at).formatted}</span>}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </GlassCard>
+              )}
 
               {/* Analyst Review Box */}
               {resolvedRunId && (

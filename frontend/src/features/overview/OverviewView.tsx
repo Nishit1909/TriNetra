@@ -280,7 +280,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
           </p>
           <div className="space-y-2 text-xs">
             <div className="p-2.5 rounded-[12px] bg-white/[0.04] border border-white/[0.08] flex items-center justify-between">
-              <span className="text-slate-300">Vehicle GPS → Person</span>
+              <span className="text-slate-300">Location → Person</span>
               <span className="font-mono font-semibold text-amber-300">
                 {summary.uncertainty.vehicle_person_attribution.replace(/_/g, ' ')}
               </span>

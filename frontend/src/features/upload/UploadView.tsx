@@ -35,6 +35,8 @@ export const UploadView: React.FC<UploadViewProps> = ({
   const [personsFile, setPersonsFile] = useState<File | null>(null);
   const [relationshipsFile, setRelationshipsFile] = useState<File | null>(null);
   const [communicationsFile, setCommunicationsFile] = useState<File | null>(null);
+  const [locationsFile, setLocationsFile] = useState<File | null>(null);
+  const [transactionsFile, setTransactionsFile] = useState<File | null>(null);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [validating, setValidating] = useState(false);
@@ -83,13 +85,18 @@ export const UploadView: React.FC<UploadViewProps> = ({
     const pBlob = new Blob([template.example['persons.csv'] || ''], { type: 'text/csv' });
     const rBlob = new Blob([template.example['relationships.csv'] || ''], { type: 'text/csv' });
     const commsText = template.example['communications.csv'];
+    const locText = template.example['locations.csv'];
+    const txText = template.example['transactions.csv'];
+    const asFile = (text: string | undefined, name: string) =>
+      text ? new File([new Blob([text], { type: 'text/csv' })], name, { type: 'text/csv' }) : null;
+    setLocationsFile(asFile(locText, 'locations.csv'));
+    setTransactionsFile(asFile(txText, 'transactions.csv'));
     setUploadMode('csv');
     setPersonsFile(new File([pBlob], 'persons.csv', { type: 'text/csv' }));
     setRelationshipsFile(new File([rBlob], 'relationships.csv', { type: 'text/csv' }));
-    // communications.csv is optional: only attach it when the server provides an example
     setCommunicationsFile(commsText ? new File([new Blob([commsText], { type: 'text/csv' })], 'communications.csv', { type: 'text/csv' }) : null);
     setReport(null);
-    onToast(`Loaded example files (${commsText ? 'persons, relationships, communications' : 'persons, relationships'})`, 'emerald');
+    onToast('Loaded example files', 'emerald');
   };
 
   const buildFormData = () => {
@@ -100,6 +107,8 @@ export const UploadView: React.FC<UploadViewProps> = ({
       if (personsFile) fd.append('persons', personsFile);
       if (relationshipsFile) fd.append('relationships', relationshipsFile);
       if (communicationsFile) fd.append('communications', communicationsFile);
+      if (locationsFile) fd.append('locations', locationsFile);
+      if (transactionsFile) fd.append('transactions', transactionsFile);
     }
     return fd;
   };
@@ -170,7 +179,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
 
   const canValidate =
     (uploadMode === 'zip' && Boolean(zipFile)) ||
-    (uploadMode === 'csv' && Boolean(personsFile && relationshipsFile));
+    (uploadMode === 'csv' && Boolean(personsFile && relationshipsFile && communicationsFile));
 
   return (
     <div className="space-y-5">
@@ -316,11 +325,13 @@ export const UploadView: React.FC<UploadViewProps> = ({
             />
           </label>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
             {[
               { label: 'persons.csv (Required)', file: personsFile, setter: setPersonsFile },
               { label: 'relationships.csv (Required)', file: relationshipsFile, setter: setRelationshipsFile },
-              { label: 'communications.csv (Optional)', file: communicationsFile, setter: setCommunicationsFile },
+              { label: 'communications.csv (Required)', file: communicationsFile, setter: setCommunicationsFile },
+              { label: 'locations.csv (Optional)', file: locationsFile, setter: setLocationsFile },
+              { label: 'transactions.csv (Optional)', file: transactionsFile, setter: setTransactionsFile },
             ].map((slot) => (
               <label
                 key={slot.label}
@@ -388,7 +399,7 @@ export const UploadView: React.FC<UploadViewProps> = ({
           </div>
 
           {report.counts && (
-            <div className="grid grid-cols-3 gap-3 text-xs">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
               <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
                 <span className="text-slate-400 block">{report.valid ? 'Validated' : 'Rows read'} persons</span>
                 <span className="font-mono text-lg font-bold text-white">{report.counts.persons}</span>
@@ -400,6 +411,16 @@ export const UploadView: React.FC<UploadViewProps> = ({
               <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
                 <span className="text-slate-400 block">{report.valid ? 'Validated' : 'Rows read'} communications</span>
                 <span className="font-mono text-lg font-bold text-white">{report.counts.communications}</span>
+              </div>
+              <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+                <span className="text-slate-400 block">Locations → meetings</span>
+                <span className="font-mono text-lg font-bold text-white">
+                  {report.counts.locations ?? 0} → {report.counts.meetings ?? 0}
+                </span>
+              </div>
+              <div className="p-3 rounded-[12px] bg-white/[0.04] border border-white/[0.08]">
+                <span className="text-slate-400 block">Money transfers</span>
+                <span className="font-mono text-lg font-bold text-white">{report.counts.transactions ?? 0}</span>
               </div>
             </div>
           )}

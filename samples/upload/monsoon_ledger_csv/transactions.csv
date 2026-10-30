@@ -1,0 +1,8 @@
+transaction_id,from_person_id,to_person_id,amount,occurred_at,method,reference
+TX001,OM25,OM16,150000,2026-09-02 11:15:00,upi,consultancy fee
+TX002,OM25,OM16,175000,2026-09-09 11:15:00,upi,consultancy fee
+TX003,OM25,OM16,160000,2026-09-16 11:15:00,upi,consultancy fee
+TX010,OM16,OM28,200000,2026-09-04 13:00:00,cash,loan
+TX011,OM16,OM28,250000,2026-09-15 13:00:00,cash,loan
+TX020,OM02,OM09,4500,2026-09-05 10:00:00,bank,reimbursement
+TX021,OM10,OM27,62000,2026-09-12 15:30:00,bank,invoice 4471

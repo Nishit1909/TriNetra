@@ -115,7 +115,7 @@ The login page has one-click buttons for the three main accounts.
    - click a person → inspector → *Open evidence profile* / *Focus on this neighbourhood*; click a link → pair evidence
 4. **Leads & Predictions:** *Meets but never communicates* leads (the top GAStech lead is CFO Ingrid Barranco ↔ security officer Hennie Osvaldo). Open one: evidence, innocent explanations, Confirm/Dismiss with a reason (audit trail).
 5. **Compare Runs:** what changes when inferred evidence is added.
-6. **Upload Case** (investigator or admin): upload `samples/upload/monsoon_ledger_case.zip` or the three CSVs in `samples/upload/monsoon_ledger_csv/` → Validate → Create → *Run Analysis & Open Network Graph*. Try `monsoon_ledger_BROKEN.zip` to see validation reject it with 5 errors.
+6. **Upload Case** (investigator or admin): upload `samples/upload/monsoon_ledger_case.zip` or the CSVs in `samples/upload/monsoon_ledger_csv/` (persons, relationships, communications required; locations and transactions optional) → Validate → Create → *Run Analysis & Open Network Graph*. Try `monsoon_ledger_BROKEN.zip` to see validation reject it with 5 errors. The planted auditor ↔ accountant night meetings (found only from locations) and the supplier → customs → auditor money trail appear in Leads.
 7. **Admin Portal:**
    - alerts (denied access, conflict of interest, after hours, failed logins), access log, users and case access
    - signed-in sessions (end any session), password resets, conflict check, alert rules, SMTP settings and test e-mail

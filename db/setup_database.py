@@ -20,7 +20,7 @@ NEO_CONSTRAINTS = {
     'inv_person_snapshot': "FOR (p:InvPerson) REQUIRE (p.case_id,p.snapshot_id,p.person_id) IS UNIQUE",
     'inv_case_identity': "FOR (c:InvCase) REQUIRE c.case_id IS UNIQUE",
 }
-EXTENSION_TABLES = {'predicted_link_reviews','case_members','document_mention_reviews', 'app_users', 'access_log', 'security_alerts', 'admin_settings'}
+EXTENSION_TABLES = {'predicted_link_reviews','case_members','document_mention_reviews', 'app_users', 'access_log', 'security_alerts', 'admin_settings', 'location_points', 'location_meetings', 'money_transfers'}
 
 
 def init_env(source, target):
