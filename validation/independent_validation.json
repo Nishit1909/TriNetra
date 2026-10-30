@@ -1,0 +1,47 @@
+{
+  "independent_archive_checks": "passed",
+  "existing_backend_schema_function": "passed_in_isolation_and_with_full_module_import_without_database_calls",
+  "backend_validation": {
+    "files": [
+      "communications.csv",
+      "graph_edges.csv",
+      "graph_nodes.csv",
+      "location_events.csv",
+      "locations.csv",
+      "loyalty_events.csv",
+      "persons.csv",
+      "transactions.csv",
+      "vehicle_assignments.csv",
+      "vehicles.csv"
+    ],
+    "missing_files": [],
+    "invalid_columns": {},
+    "valid": true,
+    "optional_missing": [
+      "identity_resolution.csv"
+    ],
+    "malformed_graph_edges_skipped": 0,
+    "locations": {
+      "source_rows": 33708,
+      "unique_location_ids": 33708,
+      "canonical_rows": 33708,
+      "coordinate_conflict_groups": 0,
+      "invalid_coordinate_rows": 0,
+      "rejected_groups": 0
+    }
+  },
+  "archive": "E:\\SIH\\dataset-work\\GASTECH_MC1_MC2_VALIDATED_CASE.zip",
+  "counts": {
+    "persons.csv": 54,
+    "communications.csv": 8097,
+    "vehicles.csv": 40,
+    "vehicle_assignments.csv": 35,
+    "locations.csv": 33708,
+    "location_events.csv": 685169,
+    "transactions.csv": 1490,
+    "loyalty_events.csv": 1392,
+    "graph_nodes.csv": 33802,
+    "graph_edges.csv": 151385
+  },
+  "no_live_database_import": true
+}

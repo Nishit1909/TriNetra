@@ -1,0 +1,87 @@
+{
+  "dataset": "GAStech coherent MC1 and MC2 case",
+  "version": "2026-10-30-v1",
+  "counts": {
+    "persons.csv": 54,
+    "communications.csv": 8097,
+    "vehicles.csv": 40,
+    "vehicle_assignments.csv": 35,
+    "locations.csv": 33708,
+    "location_events.csv": 685169,
+    "transactions.csv": 1490,
+    "loyalty_events.csv": 1392,
+    "graph_nodes.csv": 33802,
+    "graph_edges.csv": 151385
+  },
+  "sources": [
+    {
+      "name": "MC1_official.zip",
+      "url": "https://visualdata.wustl.edu/varepository/VAST_Challenge_2021/challenges/MC1/dataset/MC1.zip",
+      "sha256": "f949fe1a4316bfd680fa5ad50661d78c7bf53e930f8f57592472c2e4ce7119c5"
+    },
+    {
+      "name": "MC2_verification_source.zip",
+      "url": "https://visualdata.wustl.edu/varepository/VAST_Challenge_2021/challenges/MC2/dataset/MC2.zip",
+      "sha256": "2c6a5cea0adf52ffa454dd21cad30a1301608a59315f87131d8035ad8e947f9b"
+    },
+    {
+      "name": "SIH26189_FINAL_DATASET_PATCHED_FIXED_PAKKA_FINAL.zip",
+      "url": "local supplied dataset",
+      "sha256": "2cee86bfdcaad9fc960555034bcb6ed7e3c4e45ef2e977e92e3256780ddefd6d"
+    }
+  ],
+  "validation": {
+    "persons": 54,
+    "matched_existing_people": 35,
+    "new_roster_people": 19,
+    "source_email_header_rows": 1175,
+    "resolved_nonself_recipient_events": 8097,
+    "unresolved_endpoint_events": 111,
+    "unresolved_addresses": [
+      "Sten.Sanjorge Jr.@gastech.com.tethys"
+    ],
+    "self_recipient_events": 782,
+    "repeated_To_addresses": 0,
+    "identical_header_groups": 4,
+    "identical_header_extra_rows": 5,
+    "attribute_conflicts": 8,
+    "gps_source_rows_verified": 685169,
+    "gps_original_person_attributions": {
+      "populated": 613077,
+      "blank": 72092
+    },
+    "gps_direct_person_attributions": 0,
+    "gps_vehicles": 40,
+    "source_documents": 884,
+    "document_types": {
+      "background": 4,
+      "news": 845,
+      "resume": 35
+    },
+    "email_date_range": [
+      "2014-01-06T10:28:00",
+      "2014-01-17T20:46:00"
+    ],
+    "gps_date_range": [
+      "2014-01-06T06:28:01",
+      "2014-01-19T20:56:55"
+    ],
+    "all_assertions_passed": true
+  },
+  "timezone": "Unknown source-local; no UTC offset invented",
+  "location_precision": "Supplied 4-decimal coordinate bins, verified against rounded official GPS; not named venues",
+  "excluded": [
+    "Enron communication layer and synthetic identity bridges",
+    "Derived synthetic phone CDRs",
+    "Synthetic identity-resolution training pairs",
+    "No Caviar source identified in supplied archive"
+  ],
+  "limitations": [
+    "Existing importer ignores evidence sidecars and communications timestamps",
+    "Existing importer skips GPS graph edges with blank person_id; vehicle VISITED edges are supplied in graph_edges.csv but it does not read that file",
+    "Existing importer still needs unsafe name auto-merges disabled",
+    "No live database import performed",
+    "Existing location bins inherit supplied coordinate aggregation; source GPS preserved",
+    "Unresolved alternate-domain address excluded from resolved graph, preserved for review"
+  ]
+}

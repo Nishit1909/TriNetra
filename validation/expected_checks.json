@@ -1,0 +1,58 @@
+[
+  {
+    "check": "observed_communication",
+    "source_person_id": "P0023",
+    "target_person_id": "P0021",
+    "source_record": "MC1E00002R002",
+    "expected": "relationship_supported_by_this_header; not evidence_of_crime"
+  },
+  {
+    "check": "observed_communication",
+    "source_person_id": "P0023",
+    "target_person_id": "P0015",
+    "source_record": "MC1E00002R003",
+    "expected": "relationship_supported_by_this_header; not evidence_of_crime"
+  },
+  {
+    "check": "observed_communication",
+    "source_person_id": "P0023",
+    "target_person_id": "P0013",
+    "source_record": "MC1E00002R004",
+    "expected": "relationship_supported_by_this_header; not evidence_of_crime"
+  },
+  {
+    "check": "observed_communication",
+    "source_person_id": "P0033",
+    "target_person_id": "P0018",
+    "source_record": "MC1E00003R001",
+    "expected": "relationship_supported_by_this_header; not evidence_of_crime"
+  },
+  {
+    "check": "observed_communication",
+    "source_person_id": "P0033",
+    "target_person_id": "P0002",
+    "source_record": "MC1E00003R002",
+    "expected": "relationship_supported_by_this_header; not evidence_of_crime"
+  },
+  {
+    "check": "distinct_same_surname",
+    "source_person_id": "P0007",
+    "target_person_id": "P0027",
+    "source_record": "MC1/EmployeeRecords.xlsx",
+    "expected": "remain_distinct_people"
+  },
+  {
+    "check": "unknown_email_alias",
+    "source_person_id": "",
+    "target_person_id": "",
+    "source_record": "Sten.Sanjorge Jr.@gastech.com.tethys",
+    "expected": "unresolved_until_review; do_not_auto_merge_with_kronos_address"
+  },
+  {
+    "check": "vehicle_tracking",
+    "source_person_id": "",
+    "target_person_id": "",
+    "source_record": "MC2/gps.csv",
+    "expected": "vehicle_location_observed; person_driver_identity_unknown"
+  }
+]
