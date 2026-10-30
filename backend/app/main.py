@@ -93,11 +93,13 @@ def me(principal=Depends(get_principal)):
     try:
         with connect() as conn:
             if principal.is_admin:
-                cases = [dict(r, access_level='admin') for r in conn.execute('SELECT case_id,name FROM inv.cases ORDER BY case_id').fetchall()]
+                cases = [dict(r, access_level='admin') for r in conn.execute(
+                    "SELECT case_id,name,description,source,role,is_synthetic FROM inv.cases ORDER BY (role='investigation') DESC, case_id").fetchall()]
             else:
                 from uuid import UUID
-                cases = conn.execute("""SELECT c.case_id,c.name,m.access_level FROM inv.case_members m JOIN inv.cases c USING (case_id)
-                    WHERE m.user_id=%s ORDER BY c.case_id""", (UUID(principal.user_id),)).fetchall()
+                cases = conn.execute("""SELECT c.case_id,c.name,c.description,c.source,c.role,c.is_synthetic,m.access_level
+                    FROM inv.case_members m JOIN inv.cases c USING (case_id)
+                    WHERE m.user_id=%s ORDER BY (c.role='investigation') DESC, c.case_id""", (UUID(principal.user_id),)).fetchall()
     except HTTPException:
         raise
     except Exception:

@@ -253,7 +253,11 @@ def analysis_detail(case_id: str, run_id: UUID):
         require_case(case_id, conn)
         run = get_run(conn,case_id,run_id)
         metrics = conn.execute("SELECT * FROM inv.person_metrics WHERE case_id=%s AND analysis_run_id=%s ORDER BY pagerank DESC NULLS LAST,person_id", (case_id,run_id)).fetchall()
-        links = conn.execute(f"""SELECT * FROM inv.predicted_links WHERE case_id=%s AND analysis_run_id=%s
+        links = conn.execute(f"""SELECT l.*, pa.display_name person_a_name, pb.display_name person_b_name
+          FROM inv.predicted_links l
+          JOIN inv.persons pa ON pa.case_id=l.case_id AND pa.person_id=l.person_a
+          JOIN inv.persons pb ON pb.case_id=l.case_id AND pb.person_id=l.person_b
+          WHERE l.case_id=%s AND l.analysis_run_id=%s
           ORDER BY {METHOD_SQL} NULLS LAST,method,score DESC,person_a,person_b""", (case_id,run_id)).fetchall()
     links = annotate_links(links)
     by_method = {}
@@ -284,9 +288,13 @@ def list_predicted_links(case_id: str, run_id: UUID, method: str | None = None,
         get_run(conn, case_id, run_id)
         total = conn.execute(f"SELECT count(*) n FROM inv.predicted_links WHERE {' AND '.join(where)}", params).fetchone()["n"]
         # rank_in_method must be global within the method, so compute it in SQL before paging.
-        rows = conn.execute(f"""SELECT * FROM (SELECT *, row_number() OVER (PARTITION BY method ORDER BY score DESC,person_a,person_b) rank_in_method
-              FROM inv.predicted_links WHERE case_id=%s AND analysis_run_id=%s) x
-            WHERE {' AND '.join(where)} ORDER BY {METHOD_SQL} NULLS LAST,method,score DESC,person_a,person_b LIMIT %s OFFSET %s""",
+        rows = conn.execute(f"""SELECT y.*, pa.display_name person_a_name, pb.display_name person_b_name FROM (
+              SELECT * FROM (SELECT *, row_number() OVER (PARTITION BY method ORDER BY score DESC,person_a,person_b) rank_in_method
+                FROM inv.predicted_links WHERE case_id=%s AND analysis_run_id=%s) x
+              WHERE {' AND '.join(where)} ORDER BY {METHOD_SQL} NULLS LAST,method,score DESC,person_a,person_b LIMIT %s OFFSET %s) y
+            JOIN inv.persons pa ON pa.case_id=y.case_id AND pa.person_id=y.person_a
+            JOIN inv.persons pb ON pb.case_id=y.case_id AND pb.person_id=y.person_b
+            ORDER BY {METHOD_SQL} NULLS LAST,y.method,y.score DESC,y.person_a,y.person_b""",
             [case_id, run_id] + params + [limit, offset]).fetchall()
     for row in rows:
         b, note = METHOD_BASIS.get(row["method"], ("structural_pattern", "Model suggestion; a ranking, not a probability"))
