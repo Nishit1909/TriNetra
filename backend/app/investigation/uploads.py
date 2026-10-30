@@ -13,6 +13,7 @@ import math
 import re
 import uuid
 import zipfile
+from starlette.concurrency import run_in_threadpool
 from typing import Literal
 
 import pandas as pd
@@ -26,7 +27,8 @@ router = APIRouter(prefix="/api/case-uploads", tags=["ingestion"])
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024          # compressed upload
 MAX_UNCOMPRESSED_BYTES = 150 * 1024 * 1024   # sum of CSVs after unzip
 MAX_FILES_IN_ZIP = 20
-MAX_ROWS = {"persons": 50_000, "relationships": 500_000, "communications": 1_000_000}
+# Sized for the analysis model on a 1 GB server (centrality/betweenness grow fast with network size).
+MAX_ROWS = {"persons": 5_000, "relationships": 100_000, "communications": 300_000}
 MAX_ERRORS = 50
 BROADCAST_RECIPIENTS = 10                   # same rule as the derived GAStech layer
 ID_RE = re.compile(r"^[A-Za-z0-9_.:\-]{1,64}$")
@@ -86,6 +88,8 @@ def collect_files(uploads):
                     raise HTTPException(413, "ZIP contents are too large once uncompressed.")
                 key = base.lower().removesuffix(".csv")
                 if key in SPEC:
+                    if key in files:
+                        raise HTTPException(422, f"The upload contains more than one {key}.csv; send exactly one of each file.")
                     with zf.open(m) as fh:
                         data = fh.read(MAX_UNCOMPRESSED_BYTES + 1)
                     if len(data) != m.file_size:   # declared size lied: refuse
@@ -96,6 +100,8 @@ def collect_files(uploads):
         else:
             total += len(raw)
             key = name.rsplit("/", 1)[-1].lower().removesuffix(".csv")
+            if key in files:
+                raise HTTPException(422, f"The upload contains more than one {key}.csv; send exactly one of each file.")
             files[key] = raw
     if total > MAX_UNCOMPRESSED_BYTES:
         raise HTTPException(413, "Upload is too large.")
@@ -337,6 +343,10 @@ async def validate_upload(request: Request,
     """Dry run: checks the files and returns the report. Writes nothing."""
     _require_creator(principal)
     named, digest = await _gather(file, persons, relationships, communications)
+    return await run_in_threadpool(_validate_sync, named, digest)   # parsing is CPU work: keep the event loop free
+
+
+def _validate_sync(named, digest):
     files, file_errors = collect_files(named)
     _, report = validate_case_files(files)
     report["warnings"] = file_errors + report["warnings"]
@@ -356,6 +366,10 @@ async def create_case_from_upload(request: Request,
     """Validate, then create a NEW case. On any validation error nothing is written and the report is returned (422)."""
     _require_creator(principal)
     named, digest = await _gather(file, persons, relationships, communications)
+    return await run_in_threadpool(_create_sync, named, digest, name, description, role, is_synthetic, principal)
+
+
+def _create_sync(named, digest, name, description, role, is_synthetic, principal):
     files, file_errors = collect_files(named)
     tables, report = validate_case_files(files)
     report["warnings"] = file_errors + report["warnings"]

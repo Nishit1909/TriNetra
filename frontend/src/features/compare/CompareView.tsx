@@ -156,7 +156,7 @@ export const CompareView: React.FC<CompareViewProps> = ({ caseId, onSelectPerson
                         <div>
                           <div className="text-sm font-semibold text-white">{m.display_name || m.person_id}</div>
                           <div className="text-[11px] font-mono text-slate-400">
-                            {m.person_id} • Cluster {m.community_a} → {m.community_b}
+                            {m.person_id}{m.community_moved ? ` • moved cluster (${m.community_a} → ${m.community_b})` : ""}
                           </div>
                         </div>
                         <div className="flex items-center gap-3 font-mono text-xs">

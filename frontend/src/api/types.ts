@@ -264,6 +264,7 @@ export interface RankMover {
   rank_change: number;
   community_a: string | null;
   community_b: string | null;
+  community_moved?: boolean;
   hub_a: boolean;
   hub_b: boolean;
 }

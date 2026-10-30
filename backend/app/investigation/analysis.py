@@ -223,12 +223,25 @@ def compare_runs(case_id: str, run_a: UUID, run_b: UUID, top: int = Query(10, ge
         order = sorted(metrics.values(), key=lambda r: (-(r["pagerank"] or 0), r["person_id"]))
         return {r["person_id"]: i + 1 for i, r in enumerate(order)}
     ra, rb = ranks(m["a"]), ranks(m["b"])
+    # Community numbers are arbitrary labels in each run. Match each run-A community to the run-B community it overlaps most,
+    # and count a person as moved only if they are not in that matched community (so pure relabelling is not a change).
+    def groups(metrics):
+        g = {}
+        for pid, row in metrics.items():
+            if row["community_id"] is not None:
+                g.setdefault(row["community_id"], set()).add(pid)
+        return g
+    ga, gb = groups(m["a"]), groups(m["b"])
+    match = {ca: max(gb, key=lambda cb: (len(members & gb[cb]), str(cb))) if gb else None for ca, members in ga.items()}
+    moved = {p for p in set(m["a"]) & set(m["b"])
+             if m["a"][p]["community_id"] is not None and match.get(m["a"][p]["community_id"]) != m["b"][p]["community_id"]}
     movers = sorted(({"person_id": p, "display_name": names.get(p), "pagerank_rank_a": ra.get(p), "pagerank_rank_b": rb.get(p),
                       "rank_change": ra[p] - rb[p],
                       "community_a": m["a"][p]["community_id"], "community_b": m["b"][p]["community_id"],
+                      "community_moved": p in moved,
                       "hub_a": m["a"][p]["hub_flag"], "hub_b": m["b"][p]["hub_flag"]}
                      for p in set(ra) & set(rb)), key=lambda r: (-abs(r["rank_change"]), r["person_id"]))
-    movers = [r for r in movers if r["rank_change"] != 0 or r["community_a"] != r["community_b"] or r["hub_a"] != r["hub_b"]]
+    movers = [r for r in movers if r["rank_change"] != 0 or r["community_moved"] or r["hub_a"] != r["hub_b"]]
 
     def link_view(keys, src):
         rows = sorted((src[k] for k in keys), key=lambda r: (METHOD_ORDER.index(r["method"]) if r["method"] in METHOD_ORDER else 99, -r["score"]))
@@ -238,7 +251,7 @@ def compare_runs(case_id: str, run_a: UUID, run_b: UUID, top: int = Query(10, ge
         "run_a": {"analysis_run_id": run_a, "mode": runs["a"]["mode"], "weights_version": runs["a"]["weights_version"]},
         "run_b": {"analysis_run_id": run_b, "mode": runs["b"]["mode"], "weights_version": runs["b"]["weights_version"]},
         "biggest_rank_changes": movers[:top],
-        "community_changes": sum(1 for r in movers if r["community_a"] != r["community_b"]),
+        "community_changes": len(moved),
         "hub_changes": [r for r in movers if r["hub_a"] != r["hub_b"]],
         "links_only_in_b": link_view(set(l["b"]) - set(l["a"]), l["b"])[:top * 5],
         "links_only_in_a": link_view(set(l["a"]) - set(l["b"]), l["a"])[:top * 5],
@@ -381,6 +394,8 @@ def explain_person(case_id: str, person_id: str, run_id: UUID | None = None,
                       "members": [{"person_id": p, "display_name": names.get(p)} for p in group][:25]},
         "top_ties": top_ties, "suggested_links": links, "reasons": reasons,
         "note": "Network position describes how connected someone is in the recorded evidence. It is not evidence of guilt.",
+        "ties_note": "Scores and ranks are the saved results of this run. Strongest ties are recomputed from the case's current evidence "
+                     "with the same weights, so they can differ if evidence was added to the case after the run.",
     })
 
 
