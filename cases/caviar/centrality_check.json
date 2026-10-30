@@ -1,0 +1,29 @@
+{
+ "subject": "CV_X1",
+ "rank_of_subject": {
+  "start": {
+   "nodes": 15,
+   "pagerank": 1,
+   "betweenness": 1,
+   "degree": 1
+  },
+  "middle": {
+   "nodes": 32,
+   "pagerank": 1,
+   "betweenness": 1,
+   "degree": 1
+  },
+  "end": {
+   "nodes": 41,
+   "pagerank": 4,
+   "betweenness": 2,
+   "degree": 3
+  },
+  "all": {
+   "nodes": 62,
+   "pagerank": 1,
+   "betweenness": 1,
+   "degree": 1
+  }
+ }
+}

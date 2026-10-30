@@ -1,0 +1,121 @@
+{
+ "passed": 23,
+ "total": 23,
+ "checks": [
+  {
+   "check": "stops: every stop ends on a real GPS row",
+   "passed": true,
+   "detail": "3068 stops"
+  },
+  {
+   "check": "stops: end after start",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: person only via verified assignment",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: attribution label present",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "co-location: both stops exist",
+   "passed": true,
+   "detail": "13488 events"
+  },
+  {
+   "check": "co-location: stops really overlap >= 10 min",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "co-location: same place",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "co-location: vehicles match stops",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: supporting event ids exist",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: persons known",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: email ids exist in case",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: quarantined alias emails never used",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: strong/medium/weak only with >= 2 days",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: every pair lists possible innocent explanations",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: lead strength in 0..100",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "cards: evidence purchases exist",
+   "passed": true,
+   "detail": "19 cards inferred"
+  },
+  {
+   "check": "cards: evidence stops exist",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "cards: person = assigned person of vehicle",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "cards: inferred only with >= 2x runner-up",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "loyalty: purchase ids exist",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "loyalty: loyalty ids exist",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "mentions: offsets point at the matched text in the case document",
+   "passed": true,
+   "detail": "3002 mentions"
+  },
+  {
+   "check": "mentions: all proposed for review",
+   "passed": true,
+   "detail": ""
+  }
+ ]
+}
