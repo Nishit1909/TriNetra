@@ -105,7 +105,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
       api.getPersons(caseId, { limit: 100 }),
       api.getGraph(caseId, { mode, limit: 60, edge_limit: 200 }).catch(() => null),
       api.listAnalysisRuns(caseId).catch(() => []),
-      caseId === 'CASE_VAST_GASTECH' ? api.getDocument(caseId, selectedDocId).catch(() => null) : Promise.resolve(null),
+      Promise.resolve(null),   // document inspector removed from the Overview
     ]).then(async ([sumRes, pRes, gRes, runs, docRes]) => {
       if (cancelled) return;
       setSummary(sumRes);
