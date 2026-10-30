@@ -42,7 +42,7 @@ export function formatIST(iso: string | null | undefined): { formatted: string; 
 export function methodLabel(method: string): string {
   switch (method) {
     case 'tie_without_recorded_communication':
-      return 'Meets but never communicates';
+      return 'Linked, but never communicates';
     case 'hidden_link_ranker':
       return 'Hidden-link pattern (ML)';
     case 'network_proximity_ppr':

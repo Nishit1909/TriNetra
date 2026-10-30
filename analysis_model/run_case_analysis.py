@@ -324,6 +324,9 @@ def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict, warnings:
         n = len(active)
         pairs = [(a, b) for i, a in enumerate(active) for b in active[i + 1:] if not H.has_edge(a, b)]
         cand = []
+        # Small networks: don't list nearly every unconnected pair. At most one suggestion per active person,
+        # and at most a quarter of the open pairs (min 5); large cases keep the usual cap.
+        k2 = min(k, max(5, min(n, len(pairs) // 4)))
         if pairs and n <= lp.get("ppr_max_nodes", 3000):
             feats = pair_features(H, pairs)
             ppr = feats["ppr"].values
@@ -345,7 +348,7 @@ def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict, warnings:
                 if ppr[i] > 0 or model_pct is not None:
                     cand.append((*_pair(a, b), float(score[i]), i))
             cand.sort(key=lambda t: (-t[2], t[0], t[1]))
-            for a, b, sc, i in cand[:k]:
+            for a, b, sc, i in cand[:k2]:
                 shared = sorted(nx.common_neighbors(H, a, b))
                 bd = {"shared contacts": len(shared), "examples": shared[:5],
                       "network proximity (percentile)": round(float(ppr_pct[i]), 3),
@@ -359,7 +362,7 @@ def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict, warnings:
                 if sc > 0:
                     cand.append((*_pair(a, b), float(sc)))
             cand.sort(key=lambda t: (-t[2], t[0], t[1]))
-            for a, b, sc in cand[:k]:
+            for a, b, sc in cand[:k2]:
                 shared = sorted(nx.common_neighbors(H, a, b))
                 rows.append((a, b, "network_proximity_adamic_adar", sc, {"shared contacts": len(shared), "examples": shared[:5]}, []))
     return pd.DataFrame(rows, columns=LINK_COLUMNS)

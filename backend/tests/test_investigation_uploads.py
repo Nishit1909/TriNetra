@@ -33,7 +33,7 @@ def test_validation_accepts_good_files_without_merging_people():
     assert report["counts"]["persons"] == 4                     # same-name P1/P3 kept apart
     assert any("shared by different person IDs" in w for w in report["warnings"])
     assert any("combined" in w for w in report["warnings"])     # P1-P2 meetings rows combined
-    assert "EMAILED" in report["relationship_types"]
+    assert "COMMUNICATIONS" in report["relationship_types"]
     comm = tables["communications"]
     assert comm.loc[comm.subject == "all staff", "is_broadcast"].item() is True
 

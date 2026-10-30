@@ -266,7 +266,7 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { icon: <Users className="w-4 h-4" />, value: data?.counts.total_nodes, label: 'People in network' },
-          { icon: <NetworkIcon className="w-4 h-4" />, value: data?.counts.total_edges, label: 'Available connections' },
+          { icon: <NetworkIcon className="w-4 h-4" />, value: data?.counts.total_edges, label: 'Links in all layers' },
           { icon: <Focus className="w-4 h-4" />, value: gd.nodes.length, label: `People in this view (max ${limit})` },
         ].map((m) => (
           <GlassCard key={m.label} className="!py-3">

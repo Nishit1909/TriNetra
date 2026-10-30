@@ -244,15 +244,17 @@ def validate_case_files(files):
                          "source_row": line})
         comm = pd.DataFrame(rows)
         if len(comm):
-            # Communications become EMAILED relationships (one per pair) so the model sees them, with
-            # broadcast messages handled by the model's existing broadcast rule.
+            # Communications (e-mails, calls, messages) become one COMMUNICATIONS relationship per pair so the model sees
+            # them as communication. Pairs that already have a communication-type relationship row are not duplicated.
             pairs = comm.assign(a=comm[["source_person_id", "target_person_id"]].min(axis=1),
                                 b=comm[["source_person_id", "target_person_id"]].max(axis=1)).groupby(["a", "b"]).size()
-            have = set(zip(rel.person_a, rel.person_b, rel.relationship_type)) if len(rel) else set()
-            add = [(a, b, "EMAILED", float(n), int(n)) for (a, b), n in pairs.items() if (a, b, "EMAILED") not in have]
+            comm_types = {"EMAILED", "INTERCEPTED_COMMUNICATION", "COMMUNICATIONS"}
+            have = {tuple(sorted((x, y))) for x, y, t in zip(rel.person_a, rel.person_b, rel.relationship_type)
+                    if str(t).upper() in comm_types} if len(rel) else set()
+            add = [(a, b, "COMMUNICATIONS", float(n), int(n)) for (a, b), n in pairs.items() if (a, b) not in have]
             if add:
                 rel = pd.concat([rel, pd.DataFrame(add, columns=rel.columns)], ignore_index=True)
-                warnings.append(f"{len(add)} communicating pair(s) were added as EMAILED relationships so the analysis can use them.")
+                warnings.append(f"{len(add)} communicating pair(s) were added as COMMUNICATIONS relationships (e-mails and calls) so the analysis can use them.")
             if comm.is_broadcast.any():
                 warnings.append(f"{int(comm.is_broadcast.sum())} message(s) went to {BROADCAST_RECIPIENTS}+ recipients and are treated as broadcasts (no relationship strength).")
 
@@ -286,7 +288,7 @@ def _write(conn, case_id, name, description, role, is_synthetic, source, tables,
             with cur.copy("COPY inv.relationships (case_id,person_a,person_b,relationship_type,weight,evidence_count,source_table,source_note) FROM STDIN") as cp:
                 for row in rel.itertuples(index=False):
                     cp.write_row((case_id, row.person_a, row.person_b, row.relationship_type, float(row.weight), int(row.evidence_count),
-                                  "upload", "uploaded relationships.csv" if row.relationship_type != "EMAILED" or comm is None else "uploaded"))
+                                  "upload", "uploaded relationships.csv" if row.relationship_type != "COMMUNICATIONS" or comm is None else "uploaded"))
             if comm is not None and len(comm):
                 with cur.copy("""COPY inv.communication_events (case_id,communication_id,source_person_id,target_person_id,communication_type,
                                  sent_at,time_known,subject,recipient_count,is_broadcast,source_file,source_row,source_dataset) FROM STDIN""") as cp:
