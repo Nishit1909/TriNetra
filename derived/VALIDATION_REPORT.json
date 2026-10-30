@@ -1,11 +1,21 @@
 {
- "passed": 23,
- "total": 23,
+ "passed": 44,
+ "total": 44,
  "checks": [
   {
-   "check": "stops: every stop ends on a real GPS row",
+   "check": "persons: source IDs present and unique",
    "passed": true,
-   "detail": "3068 stops"
+   "detail": ""
+  },
+  {
+   "check": "persons: assignments reference known source identities",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: both bounding GPS rows exist",
+   "passed": true,
+   "detail": "2975 stops"
   },
   {
    "check": "stops: end after start",
@@ -23,9 +33,44 @@
    "detail": ""
   },
   {
+   "check": "stops: inferred stationary only within 50 m",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: uncertain gaps excluded from positive evidence",
+   "passed": true,
+   "detail": "93 uncertain gaps"
+  },
+  {
+   "check": "stops: endpoints are consecutive source rows for the same vehicle",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: intervals equal the two source timestamps",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: positions equal source coordinate bins",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: displacement recomputed from source",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "stops: every source gap retained once as eligible or uncertain",
+   "passed": true,
+   "detail": ""
+  },
+  {
    "check": "co-location: both stops exist",
    "passed": true,
-   "detail": "13488 events"
+   "detail": "13357 events"
   },
   {
    "check": "co-location: stops really overlap >= 10 min",
@@ -43,7 +88,32 @@
    "detail": ""
   },
   {
+   "check": "co-location: exact overlap interval and duration recomputed",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "co-location: people use assignment assumptions only",
+   "passed": true,
+   "detail": ""
+  },
+  {
    "check": "leads: supporting event ids exist",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: every relationship has supporting events",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: supporting events belong to this vehicle pair",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "leads: private support matches private-context events",
    "passed": true,
    "detail": ""
   },
@@ -80,7 +150,7 @@
   {
    "check": "cards: evidence purchases exist",
    "passed": true,
-   "detail": "19 cards inferred"
+   "detail": "0 cards inferred"
   },
   {
    "check": "cards: evidence stops exist",
@@ -94,6 +164,16 @@
   },
   {
    "check": "cards: inferred only with >= 2x runner-up",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "cards: ownership unresolved without verified merchant mapping",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "cards: all source card identifiers retained",
    "passed": true,
    "detail": ""
   },
@@ -114,6 +194,31 @@
   },
   {
    "check": "mentions: all proposed for review",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "mentions: person proposals reference source identities",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "overlay: unique nodes cover every endpoint",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "overlay: all edges marked inferred",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "overlay: evidence keys present",
+   "passed": true,
+   "detail": ""
+  },
+  {
+   "check": "overlay: evidence key resolves to the actual edge",
    "passed": true,
    "detail": ""
   }

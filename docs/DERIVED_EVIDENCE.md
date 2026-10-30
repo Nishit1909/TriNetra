@@ -1,53 +1,65 @@
 # Derived evidence layer
 
-The validated case (`datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip`) is the raw evidence. `derived/` is a separate layer of **conclusions drawn from it**. Every conclusion points back to case rows, and nothing in the case is changed.
+The validated case ZIP is source evidence. `derived/` contains separately generated hypotheses and supporting references. The source ZIPs and person identities are unchanged.
 
-Rebuild and check:
+## Rebuild and verify
 
-```
-unzip datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip -d /tmp/case
-python scripts/derive_evidence.py /tmp/case derived      # ~15 s
-python scripts/validate_derived.py /tmp/case derived     # 23/23 checks
+Requires Python 3.10+, pandas 2+, numpy, scikit-learn and networkx. NetworkX is used only by the separate Caviar check.
+
+```text
+python -m zipfile -e datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip case-input
+python scripts/derive_evidence.py case-input derived
+python scripts/validate_derived.py case-input derived
+python -m unittest discover -s tests -v
 python scripts/caviar_check.py cases/caviar
 ```
 
-Requires Python 3.10+, pandas, numpy, scikit-learn and networkx (the last only for the Caviar check).
+`case-input/` is a local extraction directory, excluded from Git. The unittest suite extracts and rebuilds its own disposable copy. No command above contacts a database or OpenAI API.
 
-## Rules the layer follows
+## Rules
 
-1. **GPS is vehicle evidence.** Stops and co-location are computed per vehicle. A person is attached only through `vehicle_assignments.csv`, and every such row says `person_attribution = assigned_driver_assumed`. The UI should say "X's assigned car was…", not "X was…".
-2. **Quarantined email endpoints are not used.** The 111 rows involving the unresolved CEO alias address stay out of every count.
-3. **Leads, not accusations.** Pairs get a `lead_strength` (0–100), a `lead_level`, a chance comparison and a list of `possible_innocent_explanations`. An investigator decides.
+1. GPS establishes vehicle positions. A gap of at least five minutes proposes a stop only when the positions bounding it are at most 50 metres apart. Stops remain inferred; close endpoints cannot prove continuous parking. Other gaps are retained as uncertain and excluded from positive co-location.
+2. A person is associated only through the verified assignment table, labelled `assigned_driver_assumed`. Display "this person's assigned vehicle overlapped another vehicle", not a proven personal meeting.
+3. Email counts use resolved sender-recipient events only. The 111 quarantined endpoint events remain excluded. Events are not unique messages or telephone calls.
+4. Lead strength is a hand-written screening score, not a trained model, probability of crime or calibrated significance test. Possible routine explanations remain visible.
+5. Card ownership remains unresolved because no verified merchant-to-place mapping is provided. Matching parking and purchase times alone is insufficient. No person-to-card ownership edges are exported.
 
-## Files
+## Current outputs
 
-| File | Rows | What it is | Points back to |
-|---|---:|---|---|
-| `vehicle_stops.csv` | 3,068 | A car parked for at least 5 min (VAST GPS logs only while moving) | `last_gps_event_id` → `location_events.csv` |
-| `places.csv` | 98 | Stops clustered within 50 m: workplace (1), homes (26), busy public (10+ cars), other | stops |
-| `colocation_events.csv` | 13,488 | Two cars parked at the same place at the same time for at least 10 min; context, after-hours flag, number of cars present | `stop_a`, `stop_b` |
-| `colocation_relationships.csv` | 564 pairs | Per pair: private meeting days, home visits, group gatherings, chance baseline, direct emails, lead strength and level, innocent explanations | colocation ids, communication ids |
-| `card_owner_inference.csv` + `card_owner_evidence.csv` | 55 cards (19 inferred) | Card → vehicle (→ assigned person, assumed) | purchase ids, stop ids |
-| `loyalty_card_links.csv` | 53 linked | Loyalty card ↔ payment card: same day, shop and amount at least 3 times. No driver assumption | purchase ids, loyalty ids |
-| `document_mentions.csv` | 3,002 | Exact-name person and organisation mentions with character offsets, all `proposed_needs_review` | `text_file` + offsets |
-| `derived_graph_edges.csv` | 575 | Inferred edges for the graph overlay (`is_inferred = true`); `WORKPLACE_ONLY` pairs left out | the tables above |
+| File | Rows | Meaning |
+|---|---:|---|
+| vehicle_stops.csv | 2,975 | Inferred stationary intervals with both bounding GPS IDs, coordinates and displacement |
+| uncertain_vehicle_gaps.csv | 93 | Ambiguous sampling gaps retained for inspection, excluded from positive inference |
+| places.csv | 73 | Stop clusters: one workplace-like place and 23 home-like places; classifications are inferred |
+| colocation_events.csv | 13,357 | Assigned-vehicle stop intervals overlapping for at least ten minutes within the same inferred place |
+| colocation_relationships.csv | 561 | Pair summaries, chance comparison, lead scores, explanations and support IDs for all categories |
+| card_owner_inference.csv | 55 | All source cards retained, all ownership unresolved |
+| card_owner_evidence.csv | 0 | Header-only: no unsupported ownership evidence |
+| loyalty_card_links.csv | 55 | 53 links meet the three-match rule; two remain weak. These do not establish person ownership. |
+| document_mentions.csv | 3,002 | Exact-name mentions with text offsets, all proposed for review |
+| derived_graph_edges.csv | 550 | 497 assigned-vehicle-based pair hypotheses and 53 loyalty/payment links, all marked inferred |
+| derived_graph_nodes.csv | 138 | Nodes for every overlay endpoint; merge by node_id with the base graph |
 
-## How false alarms are reduced
+## Corrected chance comparison
 
-| Step | Effect on this data |
-|---|---|
-| A private meeting needs 10+ min of overlap at a non-office, non-busy place | 13,488 co-location events → 385 private events |
-| Neighbours and co-residents are separated (`both_live_here`) | Not counted as meetings |
-| A lead needs **2 or more separate days** | "Meets privately, no direct email": 104 pairs → 26 |
-| **Chance baseline:** one car's days are shifted by 1–13 days and meetings recounted; `chance_p_value` = share of shifts that match or beat the real count | A pattern that happens every night (a routine) scores high p; a rare repeated meeting scores low p |
-| **Group gatherings** (3+ cars present) and lunch-hour routines are penalised and explained | The 7-person lunch group drops from "strong" to medium, labelled "likely a social or lunch group" |
-| Daytime-only pairs with no home visit are capped at medium | Ordinary daytime routines can't top the list |
-| Same department, neighbours, direct work email and security role at a home are listed as innocent explanations | Shown with every lead |
+One vehicle schedule is shifted by each of 1–13 days. Distinct overlap days are counted separately for each shift direction and then averaged. The old code counted distinct days after combining directions and divided again, understating the baseline.
 
-Result: 22 medium and 32 weak leads, none strong. The top leads are security staff at the CFO's and CIO's homes at night. They're flagged and annotated "could be patrol or protection duty", and the chance baseline shows the CIO visits recur on most nights, which looks like a routine. That's the intended behaviour: surface it, explain it, let a human judge.
+After that correction and exclusion of ambiguous gaps, current lead levels are 10 medium, 41 weak multi-day, 127 single-day weak and 383 not-a-lead. None is strong. Twenty-five pairs have repeated private-context overlaps with no counted direct email. These are vehicle-based screening outputs, not evidence of an undisclosed personal relationship.
 
-## Limits
-- VAST is a fictional scenario; no conclusion here is ground truth.
-- Card attribution covers 19 of 55 cards. Cafés near the office are reached on foot, so car GPS can't attribute them; they stay unresolved.
-- Mentions are exact-name matches only (no nicknames or pronouns). They're a transparent baseline for a reviewed extraction step, not a full NER system.
-- The chance baseline has 13 shifts, so the smallest possible p-value is 0.071. Treat it as a screening signal, not a significance test.
+The minimum smoothed chance value is 1/14, approximately 0.071. The short observation period, circular shifts, inferred stops and manually chosen rules limit its interpretation. Do not market this as a validated p-value or criminal-risk estimate.
+
+## Evidence keys and graph integration
+
+Every pair has `supporting_colocation_ids` covering all supporting event categories. `supporting_private_colocation_ids` retains the private-context subset separately. A graph edge supplies `evidence_table` and `evidence_key`: `relationship_key` identifies a pair row, and `link_key` identifies a loyalty/payment row.
+
+Follow a pair row to its co-location IDs, then its stop IDs, then `last_gps_event_id` and `next_gps_event_id` in the source events. Email references point to `evidence/communication_events.csv`. Do not populate a drawer with unrelated records merely because an ID exists.
+
+The 44-check validator verifies exact GPS endpoints and intervals, overlap calculations, pair membership, private-context support, source identities, node coverage and evidence-key resolution. The regression suite also proves corrupted intervals, unrelated support and missing nodes are rejected, and card suffixes retain leading zeros. These checks establish consistency, not field accuracy.
+
+## Remaining limits
+
+- A radius-50-metre place cluster is not a pairwise 50-metre proximity test; two members can be farther apart. Say "same inferred place" unless adding a separate pairwise rule.
+- Home/workplace and person-meeting names are inferred context labels, never proven addresses or personal presence. Keep attribution warnings visible.
+- Text extraction is a dictionary baseline. It misses aliases and pronouns and does not extract arbitrary relationships. Entity types also require review.
+- The source case has email headers and vehicle GPS, not genuine phone CDRs. See [input record contracts](INPUT_RECORDS.md).
+- This branch exports files. The SIH backend and frontend still require integration; no API or shared database has been updated.

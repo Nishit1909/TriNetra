@@ -2,6 +2,8 @@
 
 Start with **[docs/DATASET_HANDOFF.md](docs/DATASET_HANDOFF.md)** before importing. This repository currently contains dataset artifacts and integration notes, not a runnable application.
 
+The evidence branch also contains an offline analysis pipeline. Read [derived evidence and rebuild commands](docs/DERIVED_EVIDENCE.md) and [people, email and CDR record contracts](docs/INPUT_RECORDS.md). Its outputs require backend/frontend integration. Source people and email records are preserved; genuine phone CDRs are not available in this case.
+
 The package combines the official VAST 2021 re-release of the fictional January 2014 GAStech Mini-Challenge 1 and Mini-Challenge 2 scenario. Unrelated Enron communications and derived phone records are excluded.
 
 ## Download these files

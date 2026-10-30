@@ -27,13 +27,11 @@ CASE = Path(sys.argv[1])
 OUT = Path(sys.argv[2])
 OUT.mkdir(parents=True, exist_ok=True)
 
-STOP_GAP_MIN = 5          # VAST GPS logs only while moving: gap >= 5 min = parked
+STOP_GAP_MIN = 5          # A gap proposes a stop; both endpoints must also be nearby.
+STOP_MAX_DISPLACEMENT_M = 50
 PLACE_RADIUS_M = 50       # fixed-radius place clustering (no chaining)
 MIN_OVERLAP_MIN = 10      # parked together >= 10 min
 BUSY_PLACE_VEHICLES = 10  # a place visited by >= 10 vehicles is public/busy
-TXN_TOL = pd.Timedelta(minutes=10)
-PARK_BEFORE = pd.Timedelta(minutes=120)
-TAU_MIN = 8.0
 BROADCAST = 10            # emails to >= 10 recipients are broadcasts
 EARTH_R = 6_371_000
 ATTR = "assigned_driver_assumed"
@@ -48,6 +46,10 @@ veh_person = dict(zip(assign.vehicle_id, assign.person_id))
 name = dict(zip(persons.person_id, persons.display_name))
 dept = dict(zip(persons.person_id, persons.department))
 title = dict(zip(persons.person_id, persons.job_title))
+if not persons.person_id.is_unique or persons.person_id.isna().any():
+    raise ValueError("Person IDs must be present and unique; display names are not identity keys")
+if not assign.person_id.isin(persons.person_id).all() or not assign.vehicle_id.is_unique:
+    raise ValueError("Assignments must reference known people and one assigned person per vehicle")
 
 # ------------------------------------------------------------------ stops (vehicle level)
 le = pd.read_csv(CASE / "location_events.csv", usecols=["event_id", "vehicle_id", "location_id", "timestamp"])
@@ -57,6 +59,9 @@ le = le.sort_values(["vehicle_id", "t"]).reset_index(drop=True)
 le["lat"] = le.location_id.map(loc.latitude)
 le["lon"] = le.location_id.map(loc.longitude)
 nxt = le.groupby("vehicle_id").t.shift(-1)
+le["next_gps_event_id"] = le.groupby("vehicle_id").event_id.shift(-1)
+le["next_lat"] = le.groupby("vehicle_id").lat.shift(-1)
+le["next_lon"] = le.groupby("vehicle_id").lon.shift(-1)
 gap = (nxt - le.t).dt.total_seconds() / 60
 st = le[gap >= STOP_GAP_MIN].copy()
 st["stop_start"], st["stop_end"] = st.t, nxt[gap >= STOP_GAP_MIN]
@@ -65,6 +70,19 @@ st = st.reset_index(drop=True)
 st["stop_id"] = [f"VS{i:05d}" for i in range(1, len(st) + 1)]
 st["assigned_person_id"] = st.vehicle_id.map(veh_person)
 st["person_attribution"] = np.where(st.assigned_person_id.notna(), ATTR, "unassigned_vehicle")
+la1, lo1, la2, lo2 = np.radians(st[["lat", "lon", "next_lat", "next_lon"]].to_numpy()).T
+hav = np.sin((la2 - la1) / 2) ** 2 + np.cos(la1) * np.cos(la2) * np.sin((lo2 - lo1) / 2) ** 2
+st["boundary_distance_m"] = EARTH_R * 2 * np.arcsin(np.sqrt(np.clip(hav, 0, 1)))
+st["inference_status"] = np.where(st.boundary_distance_m <= STOP_MAX_DISPLACEMENT_M,
+                                   "inferred_stationary", "uncertain_gap")
+uncertain = st[st.inference_status == "uncertain_gap"].copy()
+uncertain.rename(columns={"event_id": "last_gps_event_id"})[[
+    "stop_id", "vehicle_id", "assigned_person_id", "person_attribution", "lat", "lon", "next_lat", "next_lon",
+    "stop_start", "stop_end", "duration_min", "last_gps_event_id", "next_gps_event_id", "boundary_distance_m",
+    "inference_status"]].to_csv(OUT / "uncertain_vehicle_gaps.csv", index=False)
+st = st[st.inference_status == "inferred_stationary"].reset_index(drop=True)
+if st.empty:
+    raise ValueError("No spatially consistent stop candidates; no co-location can be inferred")
 
 # ------------------------------------------------------------------ places
 xy = np.radians(st[["lat", "lon"]].values)
@@ -96,9 +114,11 @@ places["home_of_assigned_persons"] = places.place_id.map(
     lambda p: ";".join(sorted(veh_person.get(v, v) for v in home_vehicles.get(p, ()))))
 places.to_csv(OUT / "places.csv", index=False)
 st[["stop_id", "vehicle_id", "assigned_person_id", "person_attribution", "place_id", "lat", "lon",
-    "stop_start", "stop_end", "duration_min", "event_id"]].rename(columns={"event_id": "last_gps_event_id"}) \
+    "stop_start", "stop_end", "duration_min", "event_id", "next_gps_event_id", "next_lat", "next_lon",
+    "boundary_distance_m", "inference_status"]].rename(columns={"event_id": "last_gps_event_id"}) \
     .to_csv(OUT / "vehicle_stops.csv", index=False)
-note(f"Stops: {len(st)} parked intervals from {le.vehicle_id.nunique()} vehicles; places {len(places)} "
+note(f"Stops: {len(st)} inferred stationary intervals; {len(uncertain)} uncertain GPS gaps excluded; "
+     f"from {le.vehicle_id.nunique()} vehicles; places {len(places)} "
      f"(workplace {len(workplaces)}, homes {len(home_vehicles)} for {home.vehicle_id.nunique()} vehicles).")
 
 # ------------------------------------------------------------------ co-location (vehicle pairs)
@@ -144,7 +164,12 @@ pp = pv[pv.place_id.isin(priv_places)].copy()
 def private_mask(df):
     hv_a = [v in home_vehicles.get(p, ()) for v, p in zip(df.vehicle_id_a, df.place_id)]
     hv_b = [v in home_vehicles.get(p, ()) for v, p in zip(df.vehicle_id_b, df.place_id)]
-    return ~(np.array(hv_a) & np.array(hv_b))  # co-residents are not meetings
+    return ~(np.array(hv_a, dtype=bool) & np.array(hv_b, dtype=bool))  # co-residents are not meetings
+
+def private_day_counts(df):
+    df = df[private_mask(df)]
+    return df.assign(day=pd.to_datetime(df.overlap_start).dt.normalize()) \
+        .groupby(["vehicle_id_a", "vehicle_id_b"]).day.nunique()
 null_counts = []
 for k in range(1, ndays):
     b = pp.copy()
@@ -154,13 +179,10 @@ for k in range(1, ndays):
     back = pd.to_timedelta(wrap.astype(int) * ndays, unit="D")
     b["stop_start"] = b.stop_start + off - back
     b["stop_end"] = b.stop_end + off - back
-    m1 = overlaps(pp, b); m2 = overlaps(b, pp)
-    m = pd.concat([m1, m2])
-    m = m[private_mask(m)]
-    days = pd.to_datetime(m.overlap_start).dt.normalize()
-    cnt = m.assign(day=days).groupby(["vehicle_id_a", "vehicle_id_b"]).day.nunique() / 2  # both directions
+    # Deduplicate within each direction before averaging, rather than halving a union of days.
+    cnt = private_day_counts(overlaps(pp, b)).add(private_day_counts(overlaps(b, pp)), fill_value=0) / 2
     null_counts.append(cnt.rename(k))
-null = pd.concat(null_counts, axis=1).fillna(0)
+null = pd.concat(null_counts, axis=1).fillna(0) if null_counts else pd.DataFrame()
 
 # ------------------------------------------------------------------ email evidence (resolved endpoints only)
 ce = pd.read_csv(CASE / "evidence" / "communication_events.csv")
@@ -194,6 +216,7 @@ co[["colocation_id", "vehicle_id_a", "vehicle_id_b", "person_a", "person_b", "pe
     "group_gathering", "stop_a", "stop_b"]].to_csv(OUT / "colocation_events.csv", index=False)
 rel = co.groupby(["vehicle_id_a", "vehicle_id_b"]).agg(
     person_a=("person_a", "first"), person_b=("person_b", "first"),
+    supporting_colocation_ids=("colocation_id", lambda x: ";".join(x)),
     workplace_events=("context", lambda x: int((x == "workplace").sum())),
     public_place_events=("context", lambda x: int((x == "busy_public_place").sum())),
     both_live_here_events=("context", lambda x: int((x == "both_live_here").sum()))).reset_index()
@@ -202,11 +225,12 @@ agg = pr.groupby(["vehicle_id_a", "vehicle_id_b"]).agg(
     after_hours_private=("after_hours", "sum"), home_visits=("context", lambda x: int((x == "home_visit").sum())),
     private_places=("place_id", "nunique"),
     group_gatherings=("group_gathering", "sum"), lunch_hour_meetings=("lunch_hours", "sum"),
-    supporting_colocation_ids=("colocation_id", lambda x: ";".join(x))).reset_index()
+    supporting_private_colocation_ids=("colocation_id", lambda x: ";".join(x))).reset_index()
 rel = rel.merge(agg, on=["vehicle_id_a", "vehicle_id_b"], how="left")
 for col_ in ["private_meetings", "private_days", "after_hours_private", "home_visits", "private_places", "group_gatherings", "lunch_hour_meetings"]:
     rel[col_] = rel[col_].fillna(0).astype(int)
-rel["supporting_colocation_ids"] = rel.supporting_colocation_ids.fillna("")
+rel["supporting_private_colocation_ids"] = rel.supporting_private_colocation_ids.fillna("")
+rel["relationship_key"] = rel.vehicle_id_a + "|" + rel.vehicle_id_b
 key = list(zip(rel.vehicle_id_a, rel.vehicle_id_b))
 rel["chance_expected_days"] = [round(float(null.loc[k].mean()), 2) if k in null.index else 0.0 for k in key]
 rel["chance_p_value"] = [round(float(((null.loc[k] >= d).sum() + 1) / (null.shape[1] + 1)), 3) if k in null.index
@@ -279,48 +303,22 @@ note(f"Leads: 'meet privately, no direct email' was {old} pairs with any private
      f"with >= 2 days it is {int(rel.meets_privately_never_emails_directly.sum())}. "
      f"Lead levels {rel.lead_level.value_counts().to_dict()}.")
 
-# ------------------------------------------------------------------ card -> assigned person (timing weighted)
-tx = pd.read_csv(CASE / "transactions.csv")
+# ------------------------------------------------------------------ card ownership remains unknown without merchant coordinates
+tx = pd.read_csv(CASE / "transactions.csv", dtype={"card_last4": str})
 tx["t"] = pd.to_datetime(tx.event_time)
-shop = pv[~pv.place_id.isin(workplaces | set(home_vehicles))]
-W = []
-for r in tx.itertuples():
-    hh = shop[(shop.stop_start - TXN_TOL <= r.t) & (shop.stop_end + TXN_TOL >= r.t) & (shop.stop_start >= r.t - PARK_BEFORE)]
-    if hh.empty:
-        continue
-    dt = np.minimum((r.t - hh.stop_start).abs(), (hh.stop_end - r.t).abs()).dt.total_seconds() / 60
-    hh = hh.assign(w=np.exp(-dt / TAU_MIN), dt_min=dt.round(1)).sort_values("w", ascending=False).drop_duplicates("vehicle_id")
-    hh["share"] = hh.w / hh.w.sum()
-    for x in hh.itertuples():
-        W.append((r.transaction_id, r.card_last4, r.merchant_location, x.vehicle_id, veh_person[x.vehicle_id], x.stop_id, x.dt_min, x.share))
-W = pd.DataFrame(W, columns=["transaction_id", "card_last4", "merchant_location", "vehicle_id", "assigned_person_id", "stop_id",
-                             "minutes_from_arrival_or_departure", "share"])
-sc = W.groupby(["card_last4", "vehicle_id"]).agg(score=("share", "sum"), purchases=("transaction_id", "nunique")).reset_index()
-ncard = tx.card_last4.value_counts()
-rows = []
-for card in sorted(tx.card_last4.unique()):
-    g = sc[sc.card_last4 == card].sort_values("score", ascending=False)
-    if g.empty:
-        rows.append(dict(card_last4=card, card_purchases=int(ncard[card]), status="unresolved", reason="no parked vehicle near purchases")); continue
-    t1 = g.iloc[0]; t2 = g.iloc[1] if len(g) > 1 else None
-    ratio = t1.score / t2.score if t2 is not None else np.inf
-    ok = ratio >= 2 and t1.score >= 2
-    rows.append(dict(card_last4=card, card_purchases=int(ncard[card]), best_vehicle_id=t1.vehicle_id,
-                     best_assigned_person_id=veh_person[t1.vehicle_id], best_score=round(t1.score, 2),
-                     second_vehicle_id=t2.vehicle_id if t2 is not None else None,
-                     second_score=round(t2.score, 2) if t2 is not None else None,
-                     dominance_ratio=round(ratio, 2) if np.isfinite(ratio) else None,
-                     status="inferred" if ok else "unresolved", reason="" if ok else ("runner-up too close" if ratio < 2 else "too little evidence")))
-cards = pd.DataFrame(rows)
-cards["person_attribution"] = np.where(cards.status == "inferred", ATTR, None)
-cards["method"] = "vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
+cards = tx.groupby("card_last4").size().rename("card_purchases").reset_index()
+for column in ["best_vehicle_id", "best_assigned_person_id", "best_score", "second_vehicle_id", "second_score", "dominance_ratio", "person_attribution"]:
+    cards[column] = None
+cards["status"] = "unresolved"
+cards["reason"] = "merchant_locations_not_verified; purchase timing alone cannot establish card ownership"
+cards["method"] = "not_inferred_without_spatial_evidence"
 cards.to_csv(OUT / "card_owner_inference.csv", index=False)
-inf = dict(zip(cards[cards.status == "inferred"].card_last4, cards[cards.status == "inferred"].best_vehicle_id))
-W[W.card_last4.map(inf) == W.vehicle_id].to_csv(OUT / "card_owner_evidence.csv", index=False)
-note(f"Cards: {len(inf)}/{len(cards)} attributed to a vehicle (-> assigned person, assumed).")
+pd.DataFrame(columns=["transaction_id", "card_last4", "merchant_location", "vehicle_id", "assigned_person_id", "stop_id",
+                      "minutes_from_arrival_or_departure", "share"]).to_csv(OUT / "card_owner_evidence.csv", index=False)
+note(f"Cards: 0/{len(cards)} attributed; ownership unresolved without verified merchant locations.")
 
 # ------------------------------------------------------------------ loyalty <-> payment card (no driver assumption)
-loy = pd.read_csv(CASE / "loyalty_events.csv")
+loy = pd.read_csv(CASE / "loyalty_events.csv", dtype={"loyalty_number": str})
 tx["date"] = tx.t.dt.date
 loy["date"] = pd.to_datetime(loy.event_time).dt.date
 j = tx.merge(loy, on=["date", "merchant_location", "amount"])
@@ -329,6 +327,7 @@ lp = j.groupby(["card_last4", "loyalty_number"]).agg(matched_purchases=("transac
                                                       loyalty_event_ids=("loyalty_event_id", lambda x: ";".join(x))).reset_index()
 lp = lp.sort_values("matched_purchases", ascending=False).drop_duplicates("card_last4")
 lp["status"] = np.where(lp.matched_purchases >= 3, "linked", "weak")
+lp["link_key"] = lp.card_last4.astype(str) + "|" + lp.loyalty_number.astype(str)
 lp.to_csv(OUT / "loyalty_card_links.csv", index=False)
 note(f"Loyalty: {int((lp.status=='linked').sum())} loyalty cards linked to payment cards (same day, shop, amount >= 3 times).")
 
@@ -358,17 +357,26 @@ note(f"Mentions: {len(ment)} in {ment.document_id.nunique()} documents ({ment.en
 edges = pd.concat([
     pd.DataFrame({"source_id": rel.person_a, "target_id": rel.person_b, "relationship_type": rel.relationship_type,
                   "weight": np.round(np.log1p(rel.private_days * 3 + rel.public_place_events + rel.both_live_here_events * 0.5 + 0.1), 3),
-                  "lead_strength": rel.lead_strength, "evidence_table": "colocation_relationships.csv",
+                  "lead_strength": rel.lead_strength, "evidence_table": "colocation_relationships.csv", "evidence_key": rel.relationship_key,
                   "person_attribution": ATTR})[lambda d: d.relationship_type != "WORKPLACE_ONLY"],
-    pd.DataFrame({"source_id": cards[cards.status == "inferred"].best_assigned_person_id,
-                  "target_id": "CARD_" + cards[cards.status == "inferred"].card_last4.astype(str),
-                  "relationship_type": "LIKELY_USES_CARD", "weight": 1.0, "lead_strength": None,
-                  "evidence_table": "card_owner_evidence.csv", "person_attribution": ATTR}),
     pd.DataFrame({"source_id": "CARD_" + lp[lp.status == "linked"].card_last4.astype(str),
                   "target_id": "LOYALTY_" + lp[lp.status == "linked"].loyalty_number.astype(str),
-                  "relationship_type": "SAME_CUSTOMER_LIKELY", "weight": 1.0, "lead_strength": None,
-                  "evidence_table": "loyalty_card_links.csv", "person_attribution": "none_needed"}),
+                  "relationship_type": "SAME_CUSTOMER_LIKELY", "weight": 1.0, "lead_strength": np.nan,
+                  "evidence_table": "loyalty_card_links.csv", "evidence_key": lp[lp.status == "linked"].link_key,
+                  "person_attribution": "none_needed"}),
 ], ignore_index=True)
 edges.insert(0, "is_inferred", True)
 edges.to_csv(OUT / "derived_graph_edges.csv", index=False)
+nodes = []
+for node_id in sorted(set(edges.source_id) | set(edges.target_id)):
+    if node_id in name:
+        node_type, label = "PERSON", name[node_id]
+    elif node_id.startswith("CARD_"):
+        node_type, label = "CARD", "Payment card ending " + node_id[5:]
+    elif node_id.startswith("LOYALTY_"):
+        node_type, label = "LOYALTY_CARD", "Loyalty card " + node_id[8:]
+    else:
+        raise ValueError(f"Unknown overlay endpoint: {node_id}")
+    nodes.append(dict(node_id=node_id, node_type=node_type, label=label))
+pd.DataFrame(nodes, columns=["node_id", "node_type", "label"]).to_csv(OUT / "derived_graph_nodes.csv", index=False)
 (OUT / "derive_log.json").write_text(json.dumps(log, indent=1))
