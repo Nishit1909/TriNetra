@@ -1,0 +1,9 @@
+[
+ "Stops: 3068 parked intervals from 40 vehicles; places 98 (workplace 1, homes 26 for 34 vehicles).",
+ "Co-location: 13488 events {'workplace': 10845, 'busy_public_place': 1838, 'both_live_here': 420, 'low_traffic_place': 247, 'third_party_home': 104, 'home_visit': 34}.",
+ "Email: 8097 resolved sender-recipient events (quarantined alias rows excluded), 1262 pairs.",
+ "Leads: 'meet privately, no direct email' was 104 pairs with any private meeting; with >= 2 days it is 26. Lead levels {'not_a_lead': 383, 'weak_single_day': 127, 'weak': 32, 'medium': 22}.",
+ "Cards: 19/55 attributed to a vehicle (-> assigned person, assumed).",
+ "Loyalty: 53 loyalty cards linked to payment cards (same day, shop, amount >= 3 times).",
+ "Mentions: 3002 in 719 documents ({'ORGANIZATION': 2786, 'PERSON': 216})."
+]
