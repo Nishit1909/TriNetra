@@ -124,3 +124,23 @@ def me(principal=Depends(get_principal)):
 @app.post('/api/ingestion/upload', tags=['legacy'])
 def retired_upload(principal=Depends(get_principal)):
     raise HTTPException(410,'Legacy upload is retired. Use POST /api/case-uploads (validated, creates a new case, no automatic identity merging).')
+
+
+# ---- Built frontend (production / Cloud Run): one service serves the UI and the API ----
+from pathlib import Path as _Path
+from fastapi.responses import FileResponse as _FileResponse
+from fastapi.staticfiles import StaticFiles as _StaticFiles
+
+_DIST = _Path(__file__).resolve().parents[2] / 'frontend' / 'dist'
+if (_DIST / 'index.html').exists():
+    if (_DIST / 'assets').is_dir():
+        app.mount('/assets', _StaticFiles(directory=_DIST / 'assets'), name='assets')
+
+    @app.get('/{full_path:path}', include_in_schema=False)
+    def _spa(full_path: str):
+        if full_path.startswith(('api/', 'api', 'health', 'docs', 'redoc', 'openapi.json')):
+            raise HTTPException(404, 'Not found')
+        candidate = (_DIST / full_path).resolve()
+        if full_path and candidate.is_file() and _DIST.resolve() in candidate.parents:
+            return _FileResponse(candidate)
+        return _FileResponse(_DIST / 'index.html', headers={'Cache-Control': 'no-cache'})

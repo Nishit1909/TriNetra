@@ -1,4 +1,6 @@
-# SIH26189 · Criminal Network Intelligence Platform
+# TriNetra · See the hidden network
+
+*Criminal network intelligence platform for SIH26189.*
 
 Case-scoped network analysis for investigators: who matters in a network, how people connect, which links may be hidden, and the records behind every lead. Built for Smart India Hackathon problem SIH26189.
 
@@ -164,7 +166,11 @@ cd frontend && npm test && npm run build
 
 ---
 
-## 10. Troubleshooting
+## 10. Deploy to Google Cloud Run
+
+Follow **[DEPLOY_GOOGLE_CLOUD.md](DEPLOY_GOOGLE_CLOUD.md)**. The deploy builds the frontend and the API into one container and gives you one public HTTPS link.
+
+## 11. Troubleshooting
 
 | Symptom | Fix |
 |---|---|

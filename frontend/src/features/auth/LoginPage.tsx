@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Lock, LogIn, Mail, Share2, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Lock, LogIn, Mail, ShieldCheck } from 'lucide-react';
 import { api, ApiError } from '../../api/client';
 
 /** Demo accounts seeded by db/seed_demo_security.py. Shown only so judges and teammates can sign in quickly. */
@@ -60,15 +60,7 @@ export const LoginPage: React.FC<Props> = ({ onSignedIn, notice }) => {
         {/* Brand side */}
         <div className="hidden md:flex flex-col justify-between rounded-[24px] border border-white/[0.1] bg-white/[0.03] backdrop-blur-xl p-8">
           <div>
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-[14px] bg-gradient-to-br from-cyan-400 to-indigo-600 grid place-items-center shadow-[0_0_30px_rgba(34,211,238,0.35)]">
-                <Share2 className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold">SIH26189</div>
-                <div className="text-xs font-mono text-cyan-300">Network Intelligence</div>
-              </div>
-            </div>
+            <img src="/trinetra-logo.jpg" alt="TriNetra: see the hidden network" className="w-full max-w-[340px] rounded-[18px] shadow-[0_0_40px_rgba(239,68,68,0.18)]" />
             <h1 className="text-3xl font-semibold leading-tight mt-10">
               Follow the evidence.
               <br />

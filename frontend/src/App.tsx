@@ -241,13 +241,11 @@ export default function App() {
         <div className="p-4 space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5 overflow-hidden">
-              <div className="w-9 h-9 rounded-[12px] bg-gradient-to-br from-[#22d3ee] to-indigo-600 flex items-center justify-center shadow-glow-cyan shrink-0">
-                <Share2 className="w-5 h-5 text-slate-950 stroke-[2.5]" />
-              </div>
+              <img src="/trinetra-icon.png" alt="TriNetra" className="w-9 h-9 rounded-[12px] object-cover shadow-glow-cyan shrink-0" />
               {!sidebarCollapsed && (
                 <div className="min-w-0">
-                  <div className="font-bold text-sm text-white tracking-tight truncate">SIH26189</div>
-                  <div className="text-[11px] font-mono text-cyan-300 truncate">Network Intelligence</div>
+                  <div className="font-bold text-sm text-white tracking-tight truncate">TriNetra</div>
+                  <div className="text-[11px] font-mono text-cyan-300 truncate">See the hidden network</div>
                 </div>
               )}
             </div>

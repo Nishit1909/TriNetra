@@ -200,7 +200,7 @@ def _label(principal):
 
 def record_request(method, path, query, status_code, principal, client_ip, user_agent, request_id, duration_ms, action_override=None):
     """Write the access-log row and evaluate alert rules. Never raises into the request."""
-    if path.startswith(SKIP_PREFIXES) or method == "OPTIONS":
+    if not path.startswith("/api/") or method == "OPTIONS":
         return
     action, case_id, person_id = classify(method, path, query)
     action = action_override or action
@@ -243,7 +243,7 @@ def record_request(method, path, query, status_code, principal, client_ip, user_
                 raise_alert(conn, "sensitive_action", "low", principal, f"Sensitive action: {action.replace('_', ' ')}", case_id,
                             {"path": path, "action": action})
             key = (uid, case_id)
-            if case_id and status_code < 400 and _COI_CHECKED.get(key, 0) < time.monotonic() - 300:
+            if case_id and status_code < 400 and (key not in _COI_CHECKED or _COI_CHECKED[key] < time.monotonic() - 300):
                 _COI_CHECKED[key] = time.monotonic()      # re-check a user/case pair at most every 5 minutes
                 user = conn.execute("SELECT * FROM inv.app_users WHERE user_id=%s", (_uuid_or_none(principal),)).fetchone()
                 matches = conflict_matches(conn, user, case_id)

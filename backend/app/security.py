@@ -41,8 +41,8 @@ def _app_user(user_id):
 
 
 def validate_runtime_settings():
-    if settings.app_env.lower() == 'production' and not settings.auth_enabled:
-        raise RuntimeError('Production requires AUTH_ENABLED=true.')
+    if settings.app_env.lower() == 'production' and not (settings.auth_enabled or settings.login_required):
+        raise RuntimeError('Production requires AUTH_ENABLED=true or LOGIN_REQUIRED=true.')
     if settings.auth_enabled and (not settings.supabase_url.startswith('https://') or not settings.supabase_publishable_key):
         raise RuntimeError('Authentication requires SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY.')
 
