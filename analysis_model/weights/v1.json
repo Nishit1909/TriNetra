@@ -1,0 +1,125 @@
+{
+  "version": "v1",
+  "created": "2026-10-30",
+  "description": "Default evidence weights. Hand-set, informed by the Noordin benchmark (results/noordin) and the GAStech feasibility check; not copied from any trained model.",
+  "communication_types": [
+    "EMAILED",
+    "INTERCEPTED_COMMUNICATION",
+    "COMMUNICATIONS"
+  ],
+  "observed": {
+    "EMAILED": {
+      "weight": 1.0,
+      "source": "observed record; strength = log1p(direct emails); broadcast-only pairs get broadcast_email_weight"
+    },
+    "INTERCEPTED_COMMUNICATION": {
+      "weight": 1.0,
+      "source": "observed record; input weight = intercept count"
+    },
+    "COMMUNICATIONS": {
+      "weight": 1.0,
+      "source": "Noordin label layer; observed communication"
+    },
+    "FRIENDSHIP": {
+      "weight": 1.0,
+      "source": "Noordin: strong tier (87% of pairs also communicate; bootstrap range excludes zero)"
+    },
+    "MEETINGS": {
+      "weight": 1.0,
+      "source": "Noordin: strong tier (89%)"
+    },
+    "KINSHIP": {
+      "weight": 0.9,
+      "source": "Noordin: strong but only 16 pairs"
+    },
+    "SOULMATES": {
+      "weight": 0.7,
+      "source": "Noordin: high share but 11 pairs; range includes zero"
+    },
+    "BUSINESS&FINANCE": {
+      "weight": 0.7,
+      "source": "Noordin: high share but 15 pairs; range includes zero"
+    },
+    "LOGISTICS": {
+      "weight": 0.5,
+      "source": "Noordin: weak-medium (52%)"
+    },
+    "TRAININGEVENTS": {
+      "weight": 0.3,
+      "source": "Noordin: weak (30%)"
+    },
+    "OPERATIONS": {
+      "weight": 0.3,
+      "source": "Noordin: weak (27%)"
+    },
+    "CLASSMATES": {
+      "weight": 0.2,
+      "source": "Noordin: weak (22%)"
+    }
+  },
+  "observed_default": {
+    "weight": 0.5,
+    "source": "unknown observed type: judgement"
+  },
+  "inferred_factors": {
+    "private_day": {
+      "weight": 3.0,
+      "cap": 5,
+      "source": "repetition is the core lead signal (judgement); Noordin: meetings are a strong tier"
+    },
+    "home_visit": {
+      "weight": 1.5,
+      "source": "visit to a home is more personal than a shared venue (judgement)"
+    },
+    "after_hours_share": {
+      "weight": 2.0,
+      "source": "share of private overlaps after 20:00, before 06:00 or at weekends (judgement)"
+    },
+    "beats_chance": {
+      "weight": 2.5,
+      "source": "chance_p_value <= 0.1 with >= 2 private days: more than routine overlap"
+    },
+    "public_events_log": {
+      "weight": 0.3,
+      "source": "GAStech: public sightings barely change email rate (29% vs 24%)"
+    },
+    "co_resident": {
+      "weight": 0.5,
+      "source": "neighbours / co-residents: proximity, not a meeting"
+    },
+    "group_gathering_share": {
+      "weight": 0.6,
+      "source": "multiplicative: private-day points reduced by 60% x share of overlaps that were group gatherings (3+ cars)"
+    },
+    "same_department": {
+      "weight": -1.5,
+      "source": "GAStech: emails follow departments (95% vs 5%); same-department contact is routine"
+    },
+    "daytime_only": {
+      "weight": 0.5,
+      "source": "multiplicative: no after-hours overlap and no home visit -> total halved (ordinary daytime routine)"
+    }
+  },
+  "inferred_scale": 15.0,
+  "inferred_type_default": {
+    "weight": 0.5,
+    "source": "inferred type without factors: judgement"
+  },
+  "graph": {
+    "association_strength": true,
+    "hub_sigma": 3.0,
+    "hub_min_degree": 3,
+    "betweenness_exact_max_nodes": 2000,
+    "betweenness_sample_k": 500,
+    "community_resolution": 1.0,
+    "seed": 42
+  },
+  "link_prediction": {
+    "max_per_method": 50,
+    "adamic_adar_min_score": 0.0
+  },
+  "broadcast_email_weight": {
+    "weight": 0.0,
+    "source": "pairs linked only by all-staff broadcasts (>=10 recipients) are not a relationship; GAStech: broadcasts connect almost every pair"
+  }
+}

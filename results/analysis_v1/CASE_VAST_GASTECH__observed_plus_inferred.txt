@@ -1,0 +1,76 @@
+{
+ "status": "ok",
+ "stages": {
+  "validate_input": {
+   "status": "ok",
+   "error": null,
+   "rows": 1759
+  },
+  "edge_strength": {
+   "status": "ok",
+   "error": null,
+   "rows": 1759
+  },
+  "graph": {
+   "status": "ok",
+   "error": null,
+   "rows": 660
+  },
+  "centrality": {
+   "status": "ok",
+   "error": null,
+   "rows": 54
+  },
+  "communities": {
+   "status": "ok",
+   "error": null,
+   "rows": 6
+  },
+  "link_prediction": {
+   "status": "ok",
+   "error": null,
+   "rows": 100
+  }
+ },
+ "warnings": [
+  "1021 edges have zero strength after weighting (kept for evidence, ignored in the graph)"
+ ]
+}
+
+Top 8 by PageRank
+        person_id                name  pagerank  betweenness  degree community_id  hub_flag
+MC1_BD8CBF03CE71           Henk Mies  0.023853     0.058781      16          C00     False
+MC1_44CCF411FECA Ruscella Mies Haber  0.021526     0.042090      14          C03     False
+MC1_C5DA792DB870     Claudio Hawelon  0.020990     0.029753      15          C00     False
+           P0002          Lars Azada  0.020328     0.010885      28          C01     False
+MC1_764FD0C5F827     Rachel Pantanal  0.020119     0.051524      11          C03     False
+           P0021      Hennie Osvaldo  0.020089     0.008708      30          C02     False
+MC1_44D5D7C163BE      Benito Hawelon  0.019941     0.056604      15          C00     False
+           P0001        Nils Calixto  0.019835     0.046444      32          C04     False
+
+Top 8 by betweenness
+        person_id            name  betweenness community_id
+MC1_AC197C59EA74      Emile Arpa     0.071843          C00
+           P0008   Lucas Alcazar     0.061684          C04
+MC1_BD8CBF03CE71       Henk Mies     0.058781          C00
+MC1_44D5D7C163BE  Benito Hawelon     0.056604          C00
+           P0032     Orhan Strum     0.053701          C05
+           P0007     Elsa Orilla     0.052975          C01
+MC1_764FD0C5F827 Rachel Pantanal     0.051524          C03
+           P0001    Nils Calixto     0.046444          C04
+
+Communities: {'C00': 14, 'C01': 13, 'C02': 11, 'C03': 8, 'C05': 4, 'C04': 4}
+
+adamic_adar_shared_contacts: 50 suggestions; top 5
+  Kare Orilla - Felix Resumir  score=8.794  {'shared contacts': 30, 'examples': ['MC1_44D5D7C163BE', 'P0002', 'P0004', 'P0005', 'P0006']}  refs=0
+  Brand Tempestad - Willem Vasco-Pais  score=8.709  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005']}  refs=0
+  Isak Baza - Linnea Bergen  score=8.681  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0007']}  refs=0
+  Felix Balas - Hideki Cocinaro  score=8.479  {'shared contacts': 29, 'examples': ['P0001', 'P0004', 'P0005', 'P0006', 'P0007']}  refs=0
+  Ada Campo-Corrente - Sven Flecha  score=8.429  {'shared contacts': 29, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005']}  refs=0
+
+inferred_without_recorded_communication: 50 suggestions; top 5
+  Ingrid Barranco - Hennie Osvaldo  score=0.655  {'private meeting days (2)': 6.0, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33}  refs=24
+  Nils Calixto - Marin Onda  score=0.600  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.286, 'more than chance': 2.5, 'seen together in public': 0.208}  refs=28
+  Ada Campo-Corrente - Isia Vann  score=0.575  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.2, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33}  refs=25
+  Linnea Bergen - Elsa Orilla  score=0.546  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.8, 'after-hours share': 1.0, 'more than chance': 2.5, 'seen together in public': 0.483}  refs=29
+  Lucas Alcazar - Marin Onda  score=0.464  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.333, 'seen together in public': 0.624}  refs=33

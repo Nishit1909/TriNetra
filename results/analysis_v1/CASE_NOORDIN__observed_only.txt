@@ -1,0 +1,69 @@
+{
+ "status": "ok",
+ "stages": {
+  "validate_input": {
+   "status": "ok",
+   "error": null,
+   "rows": 1014
+  },
+  "edge_strength": {
+   "status": "ok",
+   "error": null,
+   "rows": 1014
+  },
+  "graph": {
+   "status": "ok",
+   "error": null,
+   "rows": 623
+  },
+  "centrality": {
+   "status": "ok",
+   "error": null,
+   "rows": 79
+  },
+  "communities": {
+   "status": "ok",
+   "error": null,
+   "rows": 8
+  },
+  "link_prediction": {
+   "status": "ok",
+   "error": null,
+   "rows": 50
+  }
+ },
+ "warnings": [
+  "structural hubs flagged for verification (degree > 46.6): ['NR_23', 'NR_59']"
+ ]
+}
+
+Top 8 by PageRank
+ person_id                 name  pagerank  betweenness  degree community_id  hub_flag
+    NR_59 Noordin Mohammed Top  0.033193     0.120879      55          C01      True
+    NR_04      Abdullah Sunata  0.024915     0.124209      25          C00     False
+    NR_23         Azhari Husin  0.024741     0.070929      47          C01      True
+    NR_13    Ahmad Rofiq Ridho  0.024513     0.196470      22          C03     False
+    NR_45       Iwan Dharmawan  0.022854     0.102564      30          C02     False
+    NR_16                Akram  0.021004     0.071595       8          C06     False
+    NR_05     Abdullah Sungkar  0.019385     0.046953      29          C03     False
+    NR_46                Jabir  0.016645     0.041292      25          C05     False
+
+Top 8 by betweenness
+ person_id                           name  betweenness community_id
+    NR_13              Ahmad Rofiq Ridho     0.196470          C03
+    NR_04                Abdullah Sunata     0.124209          C00
+    NR_59           Noordin Mohammed Top     0.120879          C01
+    NR_45                 Iwan Dharmawan     0.102564          C02
+    NR_16                          Akram     0.071595          C06
+    NR_23                   Azhari Husin     0.070929          C01
+    NR_78                  Usman bin Sef     0.064602          C04
+    NR_53 Mohamed Saifuddin (alias Faiz)     0.061938          C00
+
+Communities: {'C00': 21, 'C01': 16, 'C02': 14, 'C03': 10, 'C04': 8, 'C05': 6, 'C06': 3, 'C07': 1}
+
+adamic_adar_shared_contacts: 50 suggestions; top 5
+  Azhari Husin - Suramto  score=7.414  {'shared contacts': 23, 'examples': ['NR_02', 'NR_05', 'NR_06', 'NR_07', 'NR_08']}  refs=0
+  Abu Bakar Ba'asyir - Noordin Mohammed Top  score=7.048  {'shared contacts': 20, 'examples': ['NR_03', 'NR_05', 'NR_11', 'NR_13', 'NR_22']}  refs=0
+  Abdul Rauf - Noordin Mohammed Top  score=5.049  {'shared contacts': 16, 'examples': ['NR_05', 'NR_17', 'NR_22', 'NR_23', 'NR_24']}  refs=0
+  Jabir - Son Hadi  score=4.608  {'shared contacts': 15, 'examples': ['NR_05', 'NR_06', 'NR_22', 'NR_23', 'NR_24']}  refs=0
+  Sardona Siliwangi - Son Hadi  score=4.596  {'shared contacts': 15, 'examples': ['NR_05', 'NR_06', 'NR_08', 'NR_22', 'NR_23']}  refs=0

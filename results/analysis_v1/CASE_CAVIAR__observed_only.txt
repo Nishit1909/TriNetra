@@ -1,0 +1,69 @@
+{
+ "status": "ok",
+ "stages": {
+  "validate_input": {
+   "status": "ok",
+   "error": null,
+   "rows": 88
+  },
+  "edge_strength": {
+   "status": "ok",
+   "error": null,
+   "rows": 88
+  },
+  "graph": {
+   "status": "ok",
+   "error": null,
+   "rows": 88
+  },
+  "centrality": {
+   "status": "ok",
+   "error": null,
+   "rows": 62
+  },
+  "communities": {
+   "status": "ok",
+   "error": null,
+   "rows": 7
+  },
+  "link_prediction": {
+   "status": "ok",
+   "error": null,
+   "rows": 50
+  }
+ },
+ "warnings": [
+  "structural hubs flagged for verification (degree > 15.2): ['CV_X1', 'CV_X12']"
+ ]
+}
+
+Top 8 by PageRank
+ person_id               name  pagerank  betweenness  degree community_id  hub_flag
+    CV_X1  Caviar subject X1  0.114459     0.780328      28          C00      True
+   CV_X12 Caviar subject X12  0.081193     0.378689      17          C01      True
+   CV_X41 Caviar subject X41  0.046189     0.149727       9          C02     False
+   CV_X79 Caviar subject X79  0.033870     0.127322       5          C05     False
+   CV_X76 Caviar subject X76  0.033624     0.214754       8          C03     False
+   CV_X82 Caviar subject X82  0.030145     0.096175       4          C04     False
+   CV_X85 Caviar subject X85  0.028114     0.031148       6          C03     False
+   CV_X37 Caviar subject X37  0.025643     0.032787       3          C02     False
+
+Top 8 by betweenness
+ person_id               name  betweenness community_id
+    CV_X1  Caviar subject X1     0.780328          C00
+    CV_X3  Caviar subject X3     0.480874          C00
+   CV_X12 Caviar subject X12     0.378689          C01
+   CV_X76 Caviar subject X76     0.214754          C03
+   CV_X31 Caviar subject X31     0.151913          C00
+   CV_X41 Caviar subject X41     0.149727          C02
+   CV_X13 Caviar subject X13     0.133880          C02
+   CV_X79 Caviar subject X79     0.127322          C05
+
+Communities: {'C00': 20, 'C01': 13, 'C03': 8, 'C02': 8, 'C04': 6, 'C05': 5, 'C06': 2}
+
+adamic_adar_shared_contacts: 50 suggestions; top 5
+  Caviar subject X31 - Caviar subject X41  score=1.563  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X12', 'CV_X13']}  refs=0
+  Caviar subject X101 - Caviar subject X59  score=1.532  {'shared contacts': 2, 'examples': ['CV_X102', 'CV_X79']}  refs=0
+  Caviar subject X1 - Caviar subject X13  score=1.529  {'shared contacts': 3, 'examples': ['CV_X12', 'CV_X31', 'CV_X41']}  refs=0
+  Caviar subject X3 - Caviar subject X6  score=1.480  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X85', 'CV_X88']}  refs=0
+  Caviar subject X3 - Caviar subject X76  score=1.480  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X85', 'CV_X88']}  refs=0

@@ -1,0 +1,69 @@
+{
+ "status": "ok",
+ "stages": {
+  "validate_input": {
+   "status": "ok",
+   "error": null,
+   "rows": 1262
+  },
+  "edge_strength": {
+   "status": "ok",
+   "error": null,
+   "rows": 1262
+  },
+  "graph": {
+   "status": "ok",
+   "error": null,
+   "rows": 307
+  },
+  "centrality": {
+   "status": "ok",
+   "error": null,
+   "rows": 54
+  },
+  "communities": {
+   "status": "ok",
+   "error": null,
+   "rows": 6
+  },
+  "link_prediction": {
+   "status": "ok",
+   "error": null,
+   "rows": 50
+  }
+ },
+ "warnings": [
+  "955 edges have zero strength after weighting (kept for evidence, ignored in the graph)"
+ ]
+}
+
+Top 8 by PageRank
+        person_id                name  pagerank  betweenness  degree community_id  hub_flag
+MC1_BD8CBF03CE71           Henk Mies  0.025709     0.055152      16          C00     False
+MC1_44CCF411FECA Ruscella Mies Haber  0.022183     0.042816      14          C03     False
+MC1_C5DA792DB870     Claudio Hawelon  0.021702     0.039913      15          C00     False
+MC1_764FD0C5F827     Rachel Pantanal  0.020641     0.050798      11          C03     False
+           P0008       Lucas Alcazar  0.020328     0.068940       6          C04     False
+MC1_44D5D7C163BE      Benito Hawelon  0.020250     0.038462      15          C00     False
+MC1_DBFA9506B476      Dante Coginian  0.020003     0.013062      16          C00     False
+MC1_0E696660BB95          Irene Nant  0.019938     0.024673      15          C00     False
+
+Top 8 by betweenness
+        person_id            name  betweenness community_id
+MC1_AC197C59EA74      Emile Arpa     0.074020          C00
+           P0008   Lucas Alcazar     0.068940          C04
+           P0032     Orhan Strum     0.059507          C05
+           P0004 Ingrid Barranco     0.056604          C05
+MC1_BD8CBF03CE71       Henk Mies     0.055152          C00
+           P0006   Linnea Bergen     0.052975          C03
+MC1_764FD0C5F827 Rachel Pantanal     0.050798          C03
+           P0001    Nils Calixto     0.049347          C04
+
+Communities: {'C00': 14, 'C01': 13, 'C02': 11, 'C03': 8, 'C05': 4, 'C04': 4}
+
+adamic_adar_shared_contacts: 50 suggestions; top 5
+  Axel Calzas - Marin Onda  score=4.209  {'shared contacts': 11, 'examples': ['P0002', 'P0003', 'P0007', 'P0009', 'P0014']}  refs=0
+  Ruscella Mies Haber - Felix Resumir  score=2.561  {'shared contacts': 6, 'examples': ['P0010', 'P0013', 'P0015', 'P0016', 'P0021']}  refs=0
+  Ruscella Mies Haber - Hideki Cocinaro  score=2.454  {'shared contacts': 6, 'examples': ['MC1_860231B557DA', 'P0013', 'P0015', 'P0016', 'P0021']}  refs=0
+  Ruscella Mies Haber - Stenig Fusil  score=1.940  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024']}  refs=0
+  Ruscella Mies Haber - Varja Lagos  score=1.940  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024']}  refs=0
