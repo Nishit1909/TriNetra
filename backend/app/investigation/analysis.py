@@ -398,9 +398,24 @@ def review_prediction(case_id: str, run_id: UUID, a: str, b: str, body: ReviewRe
         rows = conn.execute("""UPDATE inv.predicted_links SET review_status=%s,review_reason=%s,reviewed_by=%s,reviewed_at=now()
           WHERE case_id=%s AND analysis_run_id=%s AND person_a=%s AND person_b=%s RETURNING *""", (body.status,body.reason,actor,case_id,run_id,a,b)).fetchall()
         if not rows:
-            raise HTTPException(404,"Predicted link not found")
+            raise HTTPException(404,"This pair is not a suggested link in the selected analysis run. Open it from Leads & Predictions for the current run.")
         for row in rows:
             conn.execute("""INSERT INTO inv.predicted_link_reviews
               (case_id,analysis_run_id,person_a,person_b,method,status,reason,reviewed_by)
               VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""", (case_id,run_id,a,b,row["method"],body.status,body.reason,actor))
     return json_safe({"reviews":rows})
+
+
+@router.get("/predicted_links/{run_id}/{a}/{b}/reviews")
+def prediction_reviews(case_id: str, run_id: UUID, a: str, b: str):
+    """Review history for one suggested link (newest first)."""
+    a, b = sorted((a, b))
+    with connect() as conn:
+        get_run(conn, case_id, run_id)
+        rows = conn.execute("""SELECT r.review_id, r.case_id, r.analysis_run_id, r.person_a, r.person_b, r.method, r.status, r.reason,
+                   r.reviewed_at, COALESCE(u.email, r.reviewed_by) AS reviewed_by
+            FROM inv.predicted_link_reviews r
+            LEFT JOIN inv.app_users u ON u.user_id::text = r.reviewed_by
+            WHERE r.case_id=%s AND r.analysis_run_id=%s AND r.person_a=%s AND r.person_b=%s
+            ORDER BY r.reviewed_at DESC""", (case_id, run_id, a, b)).fetchall()
+    return json_safe(rows)

@@ -92,12 +92,19 @@ export const PairEvidenceModal: React.FC<PairEvidenceModalProps> = ({
   const pB = personsMap.get(pair.b);
 
   const handleReview = async (status: 'confirmed' | 'dismissed') => {
-    if (!resolvedRunId) return;
+    if (!resolvedRunId) {
+      onToast('Run analysis for this case first; reviews are attached to an analysis run.', 'amber');
+      return;
+    }
+    if (!reason.trim()) {
+      onToast('Write a short reason first; every decision is recorded with its rationale.', 'amber');
+      return;
+    }
     setSubmitting(true);
     try {
       await api.reviewPredictedLink(caseId, resolvedRunId, pair.a, pair.b, { status, reason });
-      const updatedRevs = await api.getPredictedLinkReviews(caseId, resolvedRunId, pair.a, pair.b);
-      setReviews(updatedRevs);
+      const updatedRevs = await api.getPredictedLinkReviews(caseId, resolvedRunId, pair.a, pair.b).catch(() => null);
+      if (updatedRevs) setReviews(updatedRevs);
       setReason('');
       onReviewUpdated();
       onToast(`Lead marked as ${status}`, status === 'confirmed' ? 'emerald' : 'amber');
