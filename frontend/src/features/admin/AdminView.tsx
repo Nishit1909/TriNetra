@@ -949,6 +949,16 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                   />
                 </div>
               </div>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 pt-1">
+                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" aria-label="Flag weekends" className="rounded border-white/20 bg-white/10" checked={settings.alert_rules.flag_weekends} onChange={(e) => setSettings({ ...settings, alert_rules: { ...settings.alert_rules, flag_weekends: e.target.checked } })} />
+                  Flag weekend access as after hours
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" aria-label="Notify on sign-in" className="rounded border-white/20 bg-white/10" checked={settings.alert_rules.notify_logins ?? true} onChange={(e) => setSettings({ ...settings, alert_rules: { ...settings.alert_rules, notify_logins: e.target.checked } })} />
+                  Notify the admin on every sign-in (alert + e-mail)
+                </label>
+              </div>
               <div className="flex justify-end">
                 <GlassButton
                   variant="primary"
@@ -970,6 +980,20 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                 </GlassBadge>
               </div>
 
+              <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" aria-label="Send alert e-mails" className="rounded border-white/20 bg-white/10" checked={settings.smtp.enabled} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, enabled: e.target.checked } })} />
+                  <strong>Send alert e-mails</strong>
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" aria-label="Use STARTTLS" className="rounded border-white/20 bg-white/10" checked={settings.smtp.use_starttls} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, use_starttls: e.target.checked, use_ssl: e.target.checked ? false : settings.smtp.use_ssl } })} />
+                  STARTTLS (port 587)
+                </label>
+                <label className="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer">
+                  <input type="checkbox" aria-label="Use SSL" className="rounded border-white/20 bg-white/10" checked={settings.smtp.use_ssl} onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, use_ssl: e.target.checked, use_starttls: e.target.checked ? false : settings.smtp.use_starttls } })} />
+                  SSL (port 465)
+                </label>
+              </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
                   <label className="block text-slate-400 mb-1">SMTP Host</label>
@@ -988,6 +1012,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                     onChange={(e) =>
                       setSettings({ ...settings, smtp: { ...settings.smtp, port: Number(e.target.value) } })
                     }
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Username (login for the mail server)</label>
+                  <GlassInput
+                    value={settings.smtp.username}
+                    autoComplete="off"
+                    onChange={(e) => setSettings({ ...settings, smtp: { ...settings.smtp, username: e.target.value } })}
+                    placeholder="e.g. your.name@gmail.com"
                   />
                 </div>
                 <div>

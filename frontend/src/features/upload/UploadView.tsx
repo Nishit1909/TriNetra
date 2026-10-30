@@ -82,12 +82,14 @@ export const UploadView: React.FC<UploadViewProps> = ({
     if (!template?.example) return;
     const pBlob = new Blob([template.example['persons.csv'] || ''], { type: 'text/csv' });
     const rBlob = new Blob([template.example['relationships.csv'] || ''], { type: 'text/csv' });
-    const cBlob = new Blob([template.example['communications.csv'] || ''], { type: 'text/csv' });
+    const commsText = template.example['communications.csv'];
     setUploadMode('csv');
     setPersonsFile(new File([pBlob], 'persons.csv', { type: 'text/csv' }));
     setRelationshipsFile(new File([rBlob], 'relationships.csv', { type: 'text/csv' }));
-    setCommunicationsFile(new File([cBlob], 'communications.csv', { type: 'text/csv' }));
-    onToast('Loaded example persons.csv, relationships.csv & communications.csv', 'emerald');
+    // communications.csv is optional: only attach it when the server provides an example
+    setCommunicationsFile(commsText ? new File([new Blob([commsText], { type: 'text/csv' })], 'communications.csv', { type: 'text/csv' }) : null);
+    setReport(null);
+    onToast(`Loaded example files (${commsText ? 'persons, relationships, communications' : 'persons, relationships'})`, 'emerald');
   };
 
   const buildFormData = () => {

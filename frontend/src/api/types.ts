@@ -486,5 +486,6 @@ export interface AdminSettingsResponse {
     bulk_window_minutes: number;
     bulk_person_views: number;
     sensitive_actions: string[];
+    notify_logins?: boolean;
   };
 }

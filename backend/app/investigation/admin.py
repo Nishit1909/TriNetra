@@ -80,9 +80,9 @@ def create_user(body: UserIn, p=Depends(require_admin)):
     with connect() as conn:
         try:
             row = conn.execute("""INSERT INTO inv.app_users (user_id,email,display_name,role,phone,badge_number,is_demo,password_hash,password_changed_at)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,CASE WHEN %s IS NULL THEN NULL ELSE now() END) RETURNING *""",
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s) RETURNING *""",
                 (body.user_id or uuid4(), body.email.lower(), body.display_name, body.role, body.phone, body.badge_number, body.is_demo,
-                 pw_hash, pw_hash)).fetchone()
+                 pw_hash, datetime.now(timezone.utc) if pw_hash else None)).fetchone()
         except Exception as exc:
             if "unique" in str(exc).lower():
                 raise HTTPException(409, "A user with this e-mail or id already exists.")
@@ -279,6 +279,7 @@ class RulesIn(BaseModel):
     bulk_window_minutes: int = Field(default=10, ge=1, le=240)
     bulk_person_views: int = Field(default=40, ge=2, le=10000)
     sensitive_actions: list[Literal["upload", "dismiss_lead", "export", "run_analysis", "review_lead"]] = ["upload", "dismiss_lead", "export"]
+    notify_logins: bool = True
 
 
 class SmtpIn(BaseModel):

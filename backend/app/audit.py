@@ -32,6 +32,7 @@ DEFAULT_RULES = {
     "bulk_window_minutes": 10,
     "bulk_person_views": 40,             # distinct person profiles in the window
     "sensitive_actions": ["upload", "dismiss_lead", "export"],
+    "notify_logins": True,               # every successful sign-in raises a 'user_login' alert and is e-mailed
 }
 DEFAULT_SMTP = {
     "enabled": False, "host": "", "port": 587, "username": "", "from_address": "",
@@ -126,9 +127,12 @@ def _email_alert(alert_id):
             if alert is None:
                 return
             smtp = get_setting(conn, "smtp", DEFAULT_SMTP)
+            rules = get_setting(conn, "alert_rules", DEFAULT_RULES)
+        # Sign-in notices are e-mailed whenever login notifications are on, regardless of the severity threshold.
+        login_notice = alert["rule"] == "user_login" and rules.get("notify_logins", True)
         if not smtp["enabled"]:
             status, error = "disabled", None
-        elif SEVERITY_ORDER[alert["severity"]] < SEVERITY_ORDER.get(smtp["min_severity"], 1):
+        elif not login_notice and SEVERITY_ORDER[alert["severity"]] < SEVERITY_ORDER.get(smtp["min_severity"], 1):
             status, error = "below_threshold", None
         else:
             body = (f"Security alert ({alert['severity']}): {alert['title']}\n\n"

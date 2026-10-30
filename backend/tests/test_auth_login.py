@@ -147,3 +147,52 @@ def test_login_events_in_access_log(app):
     log = admin.get("/api/admin/access-log", params={"limit": 50}).json()["items"]
     actions = {r["action"] for r in log}
     assert {"login", "login_failed"} <= actions
+
+
+def test_admin_is_notified_of_every_sign_in(app, monkeypatch):
+    from app import audit
+    sent = []
+
+    class FakeSMTP:
+        def __init__(self, *a, **k): pass
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def starttls(self, context=None): pass
+        def login(self, u, p): pass
+        def send_message(self, msg): sent.append(msg)
+    monkeypatch.setattr(audit.smtplib, "SMTP", FakeSMTP)
+
+    admin = signed_in(app, ADMIN)
+    admin.post("/api/admin/settings/smtp", json={"enabled": True, "host": "smtp.example.org", "port": 587,
+               "username": "alerts@example.org", "from_address": "alerts@example.org",
+               "to_addresses": ["boss@example.org"], "min_severity": "high"}, headers=CSRF)
+    signed_in(app, VIEWER)
+    import time
+    for _ in range(40):
+        if any("signed in" in m["Subject"] for m in sent):
+            break
+        time.sleep(0.1)
+    alerts = admin.get("/api/admin/alerts").json()["items"]
+    login_alerts = [a for a in alerts if a["rule"] == "user_login" and a["user_label"] == VIEWER[0]]
+    assert login_alerts and login_alerts[0]["severity"] == "low"
+    assert "Demo Analyst Neha Iyer signed in (viewer)" == login_alerts[0]["title"]
+    assert any("Neha Iyer signed in" in m["Subject"] for m in sent)          # e-mailed despite min_severity=high
+
+    # switching it off stops the notices
+    admin.post("/api/admin/settings/alert-rules", json={"notify_logins": False}, headers=CSRF)
+    before = len([a for a in admin.get("/api/admin/alerts").json()["items"] if a["rule"] == "user_login"])
+    signed_in(app, VIEWER)
+    after = len([a for a in admin.get("/api/admin/alerts").json()["items"] if a["rule"] == "user_login"])
+    assert after == before
+
+
+def test_admin_creates_user_with_and_without_password(app):
+    admin = signed_in(app, ADMIN)
+    r = admin.post("/api/admin/users", json={"email": "nopw@example.org", "display_name": "No Password", "role": "viewer"}, headers=CSRF)
+    assert r.status_code == 200 and r.json()["has_password"] is False
+    r = admin.post("/api/admin/users", json={"email": "withpw@example.org", "display_name": "With Password", "role": "viewer",
+                                             "password": "GoodPass2026"}, headers=CSRF)
+    assert r.status_code == 200 and r.json()["has_password"] is True
+    signed_in(app, ("withpw@example.org", "GoodPass2026"))
+    bad = admin.post("/api/admin/users", json={"email": "weak@example.org", "display_name": "Weak", "role": "viewer", "password": "short"}, headers=CSRF)
+    assert bad.status_code == 422

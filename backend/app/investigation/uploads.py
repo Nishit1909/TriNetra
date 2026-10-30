@@ -324,6 +324,7 @@ def upload_template():
         "example": {
             "persons.csv": "person_id,display_name,department\nP1,Asha Rao,Finance\nP2,Vikram Shetty,Security",
             "relationships.csv": "person_a,person_b,relationship_type,weight\nP1,P2,MEETINGS,1",
+            "communications.csv": "source_person_id,target_person_id,sent_at,subject,recipient_count\nP1,P2,2026-01-05 10:30,Site visit,1",
         },
     }
 

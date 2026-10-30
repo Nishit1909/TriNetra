@@ -169,6 +169,22 @@ def login(body: LoginIn, request: Request, response: Response):
     if failure:
         raise HTTPException(*failure)
 
+    # Tell the administrator who signed in (alert in the portal + e-mail when SMTP is on).
+    try:
+        with connect() as conn:
+            rules = audit.get_setting(conn, "alert_rules", audit.DEFAULT_RULES)
+            if rules.get("notify_logins", True):
+                who = Principal(str(user["user_id"]), role=user["role"], label=user["email"], is_demo=user["is_demo"])
+                audit.raise_alert(
+                    conn, "user_login", "low", who,
+                    f"{user['display_name']} signed in ({user['role']})", None,
+                    {"email": user["email"], "role": user["role"], "client_ip": ip,
+                     "user_agent": (request.headers.get("user-agent") or "")[:160],
+                     "at": datetime.now(timezone.utc).isoformat()},
+                )
+    except Exception:
+        pass   # a notification problem must never block sign-in
+
     request.state.audit_action = "login"
     request.state.principal = Principal(
         str(user["user_id"]), is_admin=user["role"] == "admin", role=user["role"], label=user["email"], is_demo=user["is_demo"]
