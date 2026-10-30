@@ -1,0 +1,15 @@
+feature,std_coefficient,bootstrap_2.5%,bootstrap_97.5%,loo_val_ap_drop,pairs_with_feature,share_of_those_with_comm,range_excludes_zero,loo_val_ap_drop_mean_30_splits,loo_val_ap_drop_sd_30_splits
+layer_friendship,0.666,0.457,0.975,0.0012,91,0.868,True,0.0187,0.0215
+layer_kinship,0.357,0.198,1.449,0.0005,16,0.812,True,0.0124,0.0193
+layer_meetings,0.62,0.408,1.248,-0.0002,63,0.889,True,0.0106,0.0139
+jaccard,0.026,-0.562,0.49,0.0008,2213,0.087,False,0.0038,0.005
+adamic_adar,2.134,-0.971,5.018,0.0068,2213,0.087,False,0.0024,0.0045
+layer_operations,0.029,-0.268,0.281,-0.0,267,0.27,False,0.002,0.0032
+common_neighbours,-1.684,-4.729,1.332,0.0063,2213,0.087,False,0.0019,0.003
+multiplexity,0.456,0.307,0.722,-0.0,594,0.288,True,0.0016,0.0035
+layer_trainingevents,0.162,-0.065,0.355,0.0001,147,0.299,False,0.0011,0.0063
+log_degree_product,0.448,-0.083,1.535,-0.0069,2850,0.069,False,0.001,0.0047
+layer_logistics,0.168,-0.24,0.336,-0.0,29,0.517,False,-0.0003,0.0062
+layer_classmates,-0.112,-0.453,0.097,-0.0,175,0.217,False,-0.0007,0.0019
+layer_soulmates,0.263,-0.12,1.644,-0.0,11,0.818,False,-0.0013,0.013
+layer_business&finance,0.112,-0.166,1.626,0.0001,15,0.733,False,-0.0016,0.0042
