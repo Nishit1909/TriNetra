@@ -61,9 +61,9 @@ MC1_764FD0C5F827 Rachel Pantanal     0.050798          C03
 
 Communities: {'C00': 14, 'C01': 13, 'C02': 11, 'C03': 8, 'C05': 4, 'C04': 4}
 
-network_proximity_ppr: 50 suggestions; top 5
-  Axel Calzas - Marin Onda  score=0.058  {'shared contacts': 11, 'examples': ['P0002', 'P0003', 'P0007', 'P0009', 'P0014'], 'network proximity': 0.057841}  refs=0
-  Ruscella Mies Haber - Hideki Cocinaro  score=0.042  {'shared contacts': 6, 'examples': ['MC1_860231B557DA', 'P0013', 'P0015', 'P0016', 'P0021'], 'network proximity': 0.041514}  refs=0
-  Ruscella Mies Haber - Felix Resumir  score=0.041  {'shared contacts': 6, 'examples': ['P0010', 'P0013', 'P0015', 'P0016', 'P0021'], 'network proximity': 0.040595}  refs=0
-  Ruscella Mies Haber - Varja Lagos  score=0.038  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024'], 'network proximity': 0.038396}  refs=0
-  Ada Campo-Corrente - Inga Ferro  score=0.038  {'shared contacts': 3, 'examples': ['MC1_44CCF411FECA', 'P0030', 'P0035'], 'network proximity': 0.038092}  refs=0
+hidden_link_ranker: 50 suggestions; top 5
+  Ruscella Mies Haber - Hideki Cocinaro  score=0.990  {'shared contacts': 6, 'examples': ['MC1_860231B557DA', 'P0013', 'P0015', 'P0016', 'P0021'], 'network proximity (percentile)': 0.999, 'same group': False, 'learned ranker (percentile)': 1.0}  refs=0
+  Ruscella Mies Haber - Felix Resumir  score=0.990  {'shared contacts': 6, 'examples': ['P0010', 'P0013', 'P0015', 'P0016', 'P0021'], 'network proximity (percentile)': 0.998, 'same group': False, 'learned ranker (percentile)': 0.999}  refs=0
+  Ruscella Mies Haber - Kanon Herrero  score=0.985  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024'], 'network proximity (percentile)': 0.993, 'same group': False, 'learned ranker (percentile)': 0.998}  refs=0
+  Ruscella Mies Haber - Edvard Vann  score=0.985  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024'], 'network proximity (percentile)': 0.992, 'same group': False, 'learned ranker (percentile)': 0.998}  refs=0
+  Ruscella Mies Haber - Stenig Fusil  score=0.985  {'shared contacts': 5, 'examples': ['P0013', 'P0015', 'P0016', 'P0021', 'P0024'], 'network proximity (percentile)': 0.995, 'same group': False, 'learned ranker (percentile)': 0.996}  refs=0

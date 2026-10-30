@@ -61,9 +61,9 @@ Top 8 by betweenness
 
 Communities: {'C00': 20, 'C01': 13, 'C03': 8, 'C02': 8, 'C04': 6, 'C05': 5, 'C06': 2}
 
-network_proximity_ppr: 50 suggestions; top 5
-  Caviar subject X14 - Caviar subject X24  score=0.189  {'shared contacts': 1, 'examples': ['CV_X58'], 'network proximity': 0.188875}  refs=0
-  Caviar subject X101 - Caviar subject X59  score=0.180  {'shared contacts': 2, 'examples': ['CV_X102', 'CV_X79'], 'network proximity': 0.180374}  refs=0
-  Caviar subject X46 - Caviar subject X82  score=0.178  {'shared contacts': 1, 'examples': ['CV_X96'], 'network proximity': 0.178228}  refs=0
-  Caviar subject X1 - Caviar subject X86  score=0.171  {'shared contacts': 1, 'examples': ['CV_X83'], 'network proximity': 0.170801}  refs=0
-  Caviar subject X1 - Caviar subject X7  score=0.155  {'shared contacts': 1, 'examples': ['CV_X89'], 'network proximity': 0.155277}  refs=0
+hidden_link_ranker: 50 suggestions; top 5
+  Caviar subject X1 - Caviar subject X13  score=0.933  {'shared contacts': 3, 'examples': ['CV_X12', 'CV_X31', 'CV_X41'], 'network proximity (percentile)': 0.986, 'same group': False, 'learned ranker (percentile)': 1.0}  refs=0
+  Caviar subject X27 - Caviar subject X93  score=0.922  {'shared contacts': 2, 'examples': ['CV_X37', 'CV_X41'], 'network proximity (percentile)': 0.987, 'same group': True, 'learned ranker (percentile)': 0.999}  refs=0
+  Caviar subject X14 - Caviar subject X24  score=0.915  {'shared contacts': 1, 'examples': ['CV_X58'], 'network proximity (percentile)': 1.0, 'same group': True, 'learned ranker (percentile)': 0.999}  refs=0
+  Caviar subject X17 - Caviar subject X41  score=0.914  {'shared contacts': 2, 'examples': ['CV_X12', 'CV_X27'], 'network proximity (percentile)': 0.987, 'same group': True, 'learned ranker (percentile)': 0.998}  refs=0
+  Caviar subject X1 - Caviar subject X9  score=0.910  {'shared contacts': 2, 'examples': ['CV_X12', 'CV_X3'], 'network proximity (percentile)': 0.988, 'same group': False, 'learned ranker (percentile)': 0.998}  refs=0

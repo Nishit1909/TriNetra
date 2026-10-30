@@ -1,4 +1,4 @@
-# Analysis model: contract, factors and weights (v1.1)
+# Analysis model: contract, factors and weights (v1.2)
 
 `analysis_model.run_case_analysis(persons, edges, mode, weights)` analyses **one case**. The backend loads the case, calls the function, validates the output and saves the run. The function never touches a database.
 
@@ -11,7 +11,7 @@
 | `persons` | DataFrame: `person_id` (unique), optional `department` |
 | `edges` | DataFrame: `person_a`, `person_b`, `relationship_type`, `is_inferred` (bool), `weight` (float ≥ 0), optional `factors` (dict or JSON), optional `evidence_refs` (list or `;`-string) |
 | `mode` | `"observed_only"` (inferred edges dropped) or `"observed_plus_inferred"` |
-| `weights` | Parsed `weights/v1_1.json` (current; `v1.json` kept for history); its `version` is echoed back |
+| `weights` | Parsed `weights/v1_2.json` (current; `v1.json` and `v1_1.json` kept for history); its `version` is echoed back |
 
 **Output**
 
@@ -38,7 +38,8 @@
 4. **Communities:** Leiden if `leidenalg` is installed, else seeded Louvain on `w`. Labels `C00`, `C01`… by size. They're groups of people who interact closely, not verified gangs.
 5. **Link prediction** (methods chosen by the benchmark in `results/link_methods/REPORT.md`):
    - `tie_without_recorded_communication`: pairs joined by a **non-communication** tie (inferred co-location, or observed meetings, friendship and similar) with no observed communication of positive strength. Score = summed evidence strength; breakdown = factor contributions plus `basis` (`inferred` / `observed`); evidence = supporting IDs. On Noordin this recovers hidden communication at about 10× random AP, far above shared-contact methods. In `observed_only` mode, inferred ties are absent, so GAStech gets no such leads there.
-   - `network_proximity_ppr`: pairs with no edge, ranked by symmetrised **personalised PageRank** (restart 0.15, unweighted transitions). Across 8 time-sliced covert networks it beat Adamic-Adar at predicting next-period links (24 of 36 transitions, 95% CI of the gain above zero), and tied on hidden-link recovery across 17 networks. Breakdown lists shared contacts and the proximity score. Cases over 3,000 people fall back to Adamic-Adar (`network_proximity_adamic_adar`).
+   - `hidden_link_ranker` (default for pairs with no edge): a gradient-boosting ranker over 14 structural signals (shared contacts, Adamic-Adar, resource allocation, Jaccard, Katz, local path, personalised PageRank, distance, same group, degrees, clustering), each as a percentile within the case. Leave-one-group-out on 24 real covert networks: hidden-link recovery 11.4× random vs 8.8× for personalised PageRank (better in 12/17 networks, significant); future links 2.6× vs 2.9× (not significantly different). Breakdown: shared contacts, examples, proximity percentile, same group, ranker percentile. **The score ranks pairs; it is not a probability.** Model: `models/link_ranker_gbm_v1.trees.json`, NumPy-only scoring, checksum-verified; on any problem the function falls back to `network_proximity_ppr` and says so in `warnings`. `ranker_mode` in the weights file: `model` (default) / `blend` / `ppr`. Report: `results/learned_ranker/REPORT.md`.
+   - Cases with more than 3,000 connected people use Adamic-Adar (`network_proximity_adamic_adar`) to avoid an n³ step.
    - Up to 50 suggestions per method, sorted by score.
 
 ## Inferred-edge factors (GAStech co-location)
@@ -70,7 +71,7 @@
 
 The weights are **hand-set and versioned**, informed by `results/noordin/report.md` and the GAStech feasibility check. They are not a trained model and not a probability of criminality. Change them by adding `weights/v2.json`; every run stores the version it used.
 
-## Example outputs (from `example_adapter.py` on schema `inv`, weights v1.1; full text in `results/analysis_v1_1/`)
+## Example outputs (from `example_adapter.py` on schema `inv`, weights v1.2; full text in `results/analysis_v1_2/`)
 
 | Case / mode | Result |
 |---|---|
@@ -82,7 +83,9 @@ The weights are **hand-set and versioned**, informed by `results/noordin/report.
 These rankings describe position within each network. They aren't accuracy figures.
 
 ## Tests
-`pytest analysis_model/tests` (14 tests): contract shape, mode filtering, lead breakdown and evidence, broadcast handling, failed stages reported as `partial` with errors, link-prediction failure distinguished from no findings, cross-case IDs rejected, empty case, determinism, hubs flagged not dropped.
+`pytest analysis_model/tests` (18 tests, incl. ranker fallback, tampered model and ranker modes): contract shape, mode filtering, lead breakdown and evidence, broadcast handling, failed stages reported as `partial` with errors, link-prediction failure distinguished from no findings, cross-case IDs rejected, empty case, determinism, hubs flagged not dropped.
 
 ## Measured performance
-See `results/link_methods/REPORT.md`. In short: tie-based leads recover hidden communication on Noordin at AP 0.68 (10.4× random, all top 10 correct). Network proximity predicts next-period links at about 2–3× random across 8 real covert networks. These are ranking-quality measures on coded networks, not crime-detection or GAStech accuracy.
+- **Tie-based leads** (`tie_without_recorded_communication`), Noordin: AP 0.68, 10.4× random, all top 10 correct (`results/link_methods/REPORT.md`; the cleaner held-out figure is in `results/noordin/report.md`).
+- **Hidden-link ranker** (`hidden_link_ranker`), 24 real covert networks, related networks held out together: hidden links 11.4× random (PPR 8.8×); future links 2.6× (PPR 2.9×, not significantly different) (`results/learned_ranker/REPORT.md`).
+- These are ranking-quality measures on coded real networks, not crime-detection or GAStech accuracy.

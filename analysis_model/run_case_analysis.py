@@ -15,7 +15,7 @@ persons: DataFrame with person_id (unique), optional department.
 edges:   DataFrame with person_a, person_b, relationship_type, is_inferred (bool), weight (float),
          optional factors (dict or JSON string) and evidence_refs (list or ';'-separated string).
 mode:    "observed_only" drops every inferred edge; "observed_plus_inferred" keeps them.
-weights: the parsed weights JSON (see weights/v1_1.json); its "version" is echoed back.
+weights: the parsed weights JSON (see weights/v1_2.json); its "version" is echoed back.
 
 "ok" with empty predicted_links means "no findings". A failed stage is reported as failed with its error
 and never as an empty success. Pure function: no database, no network, deterministic for a given seed.
@@ -29,6 +29,12 @@ from typing import Any, Callable
 import networkx as nx
 import numpy as np
 import pandas as pd
+from pathlib import Path
+
+from .link_features import FEATURES, pair_features, to_percentiles
+from .tree_model import TreeEnsemble
+
+MODELS_DIR = Path(__file__).resolve().parent / "models"
 
 MODES = ("observed_only", "observed_plus_inferred")
 METRIC_COLUMNS = ["person_id", "degree", "weighted_degree", "betweenness", "pagerank", "community_id", "hub_flag"]
@@ -256,7 +262,34 @@ def _communities(G: nx.Graph, w: dict) -> dict:
     return {v: f"C{i:02d}" for i, c in enumerate(comms) for v in c}
 
 
-def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict) -> pd.DataFrame:
+_RANKER_CACHE: dict = {}
+
+
+def _load_ranker(lp: dict, warnings: list):
+    """Load the learned ranker once; on any problem warn and return None (caller falls back to PPR)."""
+    name = lp["ranker_model"]
+    if name in _RANKER_CACHE:
+        model, err = _RANKER_CACHE[name]
+    else:
+        model, err = None, None
+        try:
+            import hashlib
+            path = MODELS_DIR / f"{name}.trees.json"
+            meta = json.loads((MODELS_DIR / f"{name}.json").read_text())
+            if hashlib.sha256(path.read_bytes()).hexdigest() != meta["trees_sha256"]:
+                raise ValueError("model file checksum does not match its metadata")
+            if meta["features"] != FEATURES:
+                raise ValueError("feature list differs from analysis_model.link_features.FEATURES")
+            model = TreeEnsemble.load(path)     # NumPy-only scoring: no scikit-learn version dependency
+        except Exception as exc:
+            err = f"{type(exc).__name__}: {exc}"
+        _RANKER_CACHE[name] = (model, err)
+    if model is None:
+        warnings.append(f"learned ranker '{name}' unavailable ({err}); fell back to personalised PageRank")
+    return model
+
+
+def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict, warnings: list) -> pd.DataFrame:
     lp = w.get("link_prediction", {})
     k = lp.get("max_per_method", 50)
     comm_types = {t.upper() for t in w.get("communication_types", [])}
@@ -279,39 +312,56 @@ def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict) -> pd.Dat
                 bd = dict(r.breakdown)
                 bd["basis"] = "inferred" if r.inferred else "observed"
                 rows.append((r.a, r.b, "tie_without_recorded_communication", round(float(r.score), 6), bd, r.refs))
-    # method 2: network proximity for pairs with no edge at all = personalised PageRank (random walk with restart,
-    # alpha 0.85, symmetrised, unweighted transitions as benchmarked). Benchmark B (8 time-sliced covert networks,
-    # predict next-period links): beats Adamic-Adar in 24/36 evaluations, 95% CI of the gain excludes zero;
-    # benchmark C (17 networks, edge hiding): tied with Adamic-Adar.
+    # method 2: unconnected pairs. Default = learned ranker (gradient boosting on 14 structural signals,
+    # percentile-normalised within the case). Leave-one-GROUP-out on 24 real covert networks, related networks held
+    # out together (results/learned_ranker): hidden-link recovery 11.4x random vs 8.8x for personalised PageRank
+    # (better in 12/17 networks, network-level 95% CI above zero); predict-ahead 2.6x vs 2.9x (not significantly
+    # different, CI spans zero). Options: "ranker_mode": "model" (default) | "blend" (model + PPR) | "ppr".
+    # Falls back to plain PPR if the model can't be loaded, or to Adamic-Adar on huge cases.
     if G.number_of_edges():
-        nodes = sorted(G)
-        n = len(nodes)
-        if n <= lp.get("ppr_max_nodes", 3000):
-            A = nx.to_numpy_array(G, nodelist=nodes, weight=None)
-            deg = A.sum(1)
-            P = np.divide(A, deg[:, None], out=np.zeros_like(A), where=deg[:, None] > 0)
-            M = 0.15 * np.linalg.inv(np.eye(n) - 0.85 * P.T)
-            S = M + M.T
-            method = "network_proximity_ppr"
-        else:  # very large case: fall back to Adamic-Adar (tied on edge hiding) to avoid an n^3 inversion
-            S, method = None, "network_proximity_adamic_adar"
-        idx = {v: i for i, v in enumerate(nodes)}
+        active = sorted(v for v in G if G.degree(v) > 0)          # isolated people have no structural signal
+        H = G.subgraph(active)
+        n = len(active)
+        pairs = [(a, b) for i, a in enumerate(active) for b in active[i + 1:] if not H.has_edge(a, b)]
         cand = []
-        if S is not None:
-            for a, b in nx.non_edges(G):
-                sc = S[idx[a], idx[b]]
+        if pairs and n <= lp.get("ppr_max_nodes", 3000):
+            feats = pair_features(H, pairs)
+            ppr = feats["ppr"].values
+            method, model_pct = "network_proximity_ppr", None
+            mode_r = lp.get("ranker_mode", "model")
+            model = _load_ranker(lp, warnings) if (lp.get("ranker_model") and mode_r in ("model", "blend")) else None
+            if model is not None:
+                pct = to_percentiles(feats)
+                prob = model.predict_proba(pct[FEATURES].values)[:, 1]
+                model_pct = pd.Series(prob).rank(pct=True).values
+                if mode_r == "blend":
+                    score, method = model_pct + pd.Series(ppr).rank(pct=True).values, "hidden_link_ranker_blend"
+                else:
+                    score, method = prob, "hidden_link_ranker"
+            else:
+                score = ppr
+            ppr_pct = pd.Series(ppr).rank(pct=True).values
+            for i, (a, b) in enumerate(pairs):
+                if ppr[i] > 0 or model_pct is not None:
+                    cand.append((*_pair(a, b), float(score[i]), i))
+            cand.sort(key=lambda t: (-t[2], t[0], t[1]))
+            for a, b, sc, i in cand[:k]:
+                shared = sorted(nx.common_neighbors(H, a, b))
+                bd = {"shared contacts": len(shared), "examples": shared[:5],
+                      "network proximity (percentile)": round(float(ppr_pct[i]), 3),
+                      "same group": bool(feats["same_community"].iloc[i])}
+                if model_pct is not None:
+                    bd["learned ranker (percentile)"] = round(float(model_pct[i]), 3)
+                rows.append((a, b, method, sc, bd, []))
+        elif pairs:  # very large case: Adamic-Adar avoids an n^3 inversion (tied with PPR on edge hiding)
+            warnings.append(f"case has {n} connected people (> {lp.get('ppr_max_nodes', 3000)}); using Adamic-Adar for proximity")
+            for a, b, sc in nx.adamic_adar_index(H, pairs):
                 if sc > 0:
                     cand.append((*_pair(a, b), float(sc)))
-        else:
-            for a, b, sc in nx.adamic_adar_index(G, list(nx.non_edges(G))):   # list: a generator yields nothing in networkx 3.7
-                if sc > 0:
-                    cand.append((*_pair(a, b), float(sc)))
-        cand.sort(key=lambda t: (-t[2], t[0], t[1]))
-        for a, b, sc in cand[:k]:
-            shared = sorted(nx.common_neighbors(G, a, b))
-            rows.append((a, b, method, float(sc),   # unrounded: rounding creates artificial ties
-                         {"shared contacts": len(shared), "examples": shared[:5],
-                          "network proximity": round(sc, 6)}, []))
+            cand.sort(key=lambda t: (-t[2], t[0], t[1]))
+            for a, b, sc in cand[:k]:
+                shared = sorted(nx.common_neighbors(H, a, b))
+                rows.append((a, b, "network_proximity_adamic_adar", sc, {"shared contacts": len(shared), "examples": shared[:5]}, []))
     return pd.DataFrame(rows, columns=LINK_COLUMNS)
 
 
@@ -365,7 +415,7 @@ def run_case_analysis(persons: pd.DataFrame, edges: pd.DataFrame, mode: str, wei
     metrics["hub_flag"] = metrics.person_id.isin(ginfo["hubs"])
     out["person_metrics"] = metrics[METRIC_COLUMNS]
 
-    links, ok_l = run("link_prediction", _link_prediction, G, s, mode, weights)
+    links, ok_l = run("link_prediction", _link_prediction, G, s, mode, weights, warnings)
     if ok_l:
         out["predicted_links"] = links
         stages["link_prediction"]["rows"] = len(links)

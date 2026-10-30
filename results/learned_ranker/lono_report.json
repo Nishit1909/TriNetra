@@ -1,0 +1,237 @@
+{
+ "B_predict_ahead": {
+  "adamic_adar": {
+   "units": 36,
+   "mean_ap_lift": 2.503,
+   "ppr_mean_ap_lift": 2.862,
+   "unit_wins": 10,
+   "unit_ties": 2,
+   "mean_gain": -0.359,
+   "ci95": [
+    -0.717,
+    -0.019
+   ],
+   "network_wins": "0/8",
+   "network_ci95": [
+    -0.519,
+    -0.143
+   ],
+   "median_rel_gain": "-12.8%",
+   "mean_p10": 0.274,
+   "ppr_mean_p10": 0.3
+  },
+  "blend_ppr_gbm": {
+   "units": 36,
+   "mean_ap_lift": 2.817,
+   "ppr_mean_ap_lift": 2.862,
+   "unit_wins": 21,
+   "unit_ties": 2,
+   "mean_gain": -0.045,
+   "ci95": [
+    -0.233,
+    0.116
+   ],
+   "network_wins": "4/8",
+   "network_ci95": [
+    -0.227,
+    0.143
+   ],
+   "median_rel_gain": "+1.6%",
+   "mean_p10": 0.309,
+   "ppr_mean_p10": 0.3
+  },
+  "blend_ppr_lr": {
+   "units": 36,
+   "mean_ap_lift": 2.757,
+   "ppr_mean_ap_lift": 2.862,
+   "unit_wins": 13,
+   "unit_ties": 1,
+   "mean_gain": -0.105,
+   "ci95": [
+    -0.244,
+    0.051
+   ],
+   "network_wins": "5/8",
+   "network_ci95": [
+    -0.202,
+    0.166
+   ],
+   "median_rel_gain": "-1.4%",
+   "mean_p10": 0.3,
+   "ppr_mean_p10": 0.3
+  },
+  "gbm_struct": {
+   "units": 36,
+   "mean_ap_lift": 2.632,
+   "ppr_mean_ap_lift": 2.862,
+   "unit_wins": 18,
+   "unit_ties": 2,
+   "mean_gain": -0.23,
+   "ci95": [
+    -0.546,
+    0.023
+   ],
+   "network_wins": "4/8",
+   "network_ci95": [
+    -0.445,
+    0.072
+   ],
+   "median_rel_gain": "+0.5%",
+   "mean_p10": 0.305,
+   "ppr_mean_p10": 0.3
+  },
+  "lr_struct": {
+   "units": 36,
+   "mean_ap_lift": 2.582,
+   "ppr_mean_ap_lift": 2.862,
+   "unit_wins": 12,
+   "unit_ties": 1,
+   "mean_gain": -0.28,
+   "ci95": [
+    -0.603,
+    0.075
+   ],
+   "network_wins": "3/8",
+   "network_ci95": [
+    -0.52,
+    0.366
+   ],
+   "median_rel_gain": "-7.9%",
+   "mean_p10": 0.285,
+   "ppr_mean_p10": 0.3
+  }
+ },
+ "C_edge_hiding": {
+  "adamic_adar": {
+   "units": 170,
+   "mean_ap_lift": 8.607,
+   "ppr_mean_ap_lift": 8.781,
+   "unit_wins": 73,
+   "unit_ties": 10,
+   "mean_gain": -0.174,
+   "ci95": [
+    -0.635,
+    0.29
+   ],
+   "network_wins": "7/17",
+   "network_ci95": [
+    -1.174,
+    0.651
+   ],
+   "median_rel_gain": "-0.8%",
+   "mean_p10": 0.367,
+   "ppr_mean_p10": 0.353
+  },
+  "blend_ppr_gbm": {
+   "units": 170,
+   "mean_ap_lift": 9.34,
+   "ppr_mean_ap_lift": 8.781,
+   "unit_wins": 104,
+   "unit_ties": 0,
+   "mean_gain": 0.558,
+   "ci95": [
+    0.251,
+    0.876
+   ],
+   "network_wins": "11/17",
+   "network_ci95": [
+    -0.12,
+    1.245
+   ],
+   "median_rel_gain": "+6.1%",
+   "mean_p10": 0.359,
+   "ppr_mean_p10": 0.353
+  },
+  "blend_ppr_lr": {
+   "units": 170,
+   "mean_ap_lift": 9.03,
+   "ppr_mean_ap_lift": 8.781,
+   "unit_wins": 97,
+   "unit_ties": 0,
+   "mean_gain": 0.248,
+   "ci95": [
+    -0.119,
+    0.629
+   ],
+   "network_wins": "11/17",
+   "network_ci95": [
+    -0.27,
+    0.772
+   ],
+   "median_rel_gain": "+2.4%",
+   "mean_p10": 0.338,
+   "ppr_mean_p10": 0.353
+  },
+  "gbm_struct": {
+   "units": 170,
+   "mean_ap_lift": 11.432,
+   "ppr_mean_ap_lift": 8.781,
+   "unit_wins": 119,
+   "unit_ties": 0,
+   "mean_gain": 2.65,
+   "ci95": [
+    1.807,
+    3.51
+   ],
+   "network_wins": "12/17",
+   "network_ci95": [
+    0.388,
+    4.881
+   ],
+   "median_rel_gain": "+22.2%",
+   "mean_p10": 0.373,
+   "ppr_mean_p10": 0.353
+  },
+  "lr_struct": {
+   "units": 170,
+   "mean_ap_lift": 9.549,
+   "ppr_mean_ap_lift": 8.781,
+   "unit_wins": 91,
+   "unit_ties": 0,
+   "mean_gain": 0.767,
+   "ci95": [
+    -0.197,
+    1.939
+   ],
+   "network_wins": "10/17",
+   "network_ci95": [
+    -1.12,
+    3.494
+   ],
+   "median_rel_gain": "+2.4%",
+   "mean_p10": 0.301,
+   "ppr_mean_p10": 0.353
+  }
+ },
+ "lr_struct_mean_coefficients": {
+  "cn": -0.674,
+  "aa": -1.052,
+  "ra": 1.96,
+  "jaccard": 0.299,
+  "pa": -1.008,
+  "katz3": 0.017,
+  "local_path": 0.668,
+  "ppr": 0.674,
+  "inv_distance": -1.294,
+  "same_community": 0.197,
+  "deg_min": 0.493,
+  "deg_max": 1.02,
+  "clust_min": 0.108,
+  "clust_max": -0.364
+ },
+ "units": {
+  "B_predict_ahead": 36,
+  "C_edge_hiding": 170
+ },
+ "networks": 24,
+ "held_out_groups": 19,
+ "grouping": {
+  "covert_4": "jemaah_islamiyah",
+  "covert_6": "jemaah_islamiyah",
+  "covert_11": "jemaah_islamiyah",
+  "covert_26": "jemaah_islamiyah",
+  "covert_37": "jemaah_islamiyah",
+  "covert_2": "sept11_hamburg",
+  "covert_20": "sept11_hamburg"
+ }
+}

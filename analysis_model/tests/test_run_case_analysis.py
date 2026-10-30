@@ -9,7 +9,7 @@ from analysis_model import LINK_COLUMNS, METRIC_COLUMNS, STAGES, run_case_analys
 
 rca = importlib.import_module("analysis_model.run_case_analysis")  # the module (the package re-exports the function)
 
-W = json.loads((Path(__file__).resolve().parents[1] / "weights" / "v1_1.json").read_text())
+W = json.loads((Path(__file__).resolve().parents[1] / "weights" / "v1_2.json").read_text())
 
 
 def tiny():
@@ -31,7 +31,7 @@ def test_contract_shape_and_ok_status():
     assert all(s["status"] == "ok" for s in r["stages"].values())
     assert list(r["person_metrics"].columns) == METRIC_COLUMNS and len(r["person_metrics"]) == 5
     assert list(r["predicted_links"].columns) == LINK_COLUMNS
-    assert r["weights_version"] == "v1.1" and r["mode"] == "observed_plus_inferred"
+    assert r["weights_version"] == "v1.2" and r["mode"] == "observed_plus_inferred"
 
 
 def test_observed_only_ignores_inferred_edges():
@@ -131,13 +131,60 @@ def test_hub_is_flagged_not_dropped():
     assert bool(m.loc["P00", "hub_flag"]) and len(m) == 30
 
 
-def test_network_proximity_ranks_two_step_pairs_first():
+def _path4():
     p = pd.DataFrame({"person_id": ["A", "B", "C", "D"]})
     e = pd.DataFrame([("A", "B", "EMAILED", False, 1.0, None, None), ("B", "C", "EMAILED", False, 1.0, None, None),
                       ("C", "D", "EMAILED", False, 1.0, None, None)],
                      columns=["person_a", "person_b", "relationship_type", "is_inferred", "weight", "factors", "evidence_refs"])
-    pl = run_case_analysis(p, e, "observed_only", W)["predicted_links"]
+    return p, e
+
+
+def test_learned_ranker_suggests_unconnected_pairs_with_explanations():
+    p, e = _path4()
+    r = run_case_analysis(p, e, "observed_only", W)
+    pl = r["predicted_links"]
+    bl = pl[pl.method == "hidden_link_ranker"]
+    assert set(zip(bl.person_a, bl.person_b)) == {("A", "C"), ("B", "D"), ("A", "D")}
+    assert bl.score.is_monotonic_decreasing
+    bd = bl.factor_breakdown.iloc[0]
+    assert {"shared contacts", "network proximity (percentile)", "learned ranker (percentile)", "same group"} <= set(bd)
+    assert not any("unavailable" in x for x in r["warnings"])
+
+
+def _fresh(monkeypatch):
+    monkeypatch.setattr(rca, "_RANKER_CACHE", {})
+
+
+def test_missing_model_falls_back_to_ppr_with_warning(monkeypatch):
+    _fresh(monkeypatch)
+    p, e = _path4()
+    w = json.loads(json.dumps(W)); w["link_prediction"]["ranker_model"] = "does_not_exist"
+    r = run_case_analysis(p, e, "observed_only", w)
+    assert r["status"] == "ok"
+    pl = r["predicted_links"]
     pr = pl[pl.method == "network_proximity_ppr"]
-    assert set(zip(pr.person_a, pr.person_b)) == {("A", "C"), ("B", "D"), ("A", "D")}
     assert set(zip(pr.person_a[:2], pr.person_b[:2])) == {("A", "C"), ("B", "D")}   # 2 steps apart before 3 steps
-    assert pr.factor_breakdown.iloc[0]["shared contacts"] == 1 and pr.score.is_monotonic_decreasing
+    assert any("fell back to personalised PageRank" in x for x in r["warnings"])
+
+
+def test_tampered_model_is_rejected(monkeypatch, tmp_path):
+    _fresh(monkeypatch)
+    import shutil
+    for ext in ("trees.json", "json"):
+        shutil.copy(rca.MODELS_DIR / f"link_ranker_gbm_v1.{ext}", tmp_path / f"link_ranker_gbm_v1.{ext}")
+    with open(tmp_path / "link_ranker_gbm_v1.trees.json", "ab") as fh:
+        fh.write(b"tamper")
+    monkeypatch.setattr(rca, "MODELS_DIR", tmp_path)
+    p, e = _path4()
+    r = run_case_analysis(p, e, "observed_only", W)
+    assert any("checksum" in x for x in r["warnings"])
+    assert (r["predicted_links"].method == "network_proximity_ppr").any()
+
+
+@pytest.mark.parametrize("mode,method", [("blend", "hidden_link_ranker_blend"), ("ppr", "network_proximity_ppr")])
+def test_ranker_modes(monkeypatch, mode, method):
+    _fresh(monkeypatch)
+    p, e = _path4()
+    w = json.loads(json.dumps(W)); w["link_prediction"]["ranker_mode"] = mode
+    pl = run_case_analysis(p, e, "observed_only", w)["predicted_links"]
+    assert set(pl.method) == {method}

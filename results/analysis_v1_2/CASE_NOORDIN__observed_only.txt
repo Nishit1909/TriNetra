@@ -61,12 +61,12 @@ Top 8 by betweenness
 
 Communities: {'C00': 21, 'C01': 16, 'C02': 14, 'C03': 10, 'C04': 8, 'C05': 6, 'C06': 3, 'C07': 1}
 
-network_proximity_ppr: 50 suggestions; top 5
-  Abu Bakar Ba'asyir - Noordin Mohammed Top  score=0.046  {'shared contacts': 20, 'examples': ['NR_03', 'NR_05', 'NR_11', 'NR_13', 'NR_22'], 'network proximity': 0.046435}  refs=0
-  Azhari Husin - Suramto  score=0.043  {'shared contacts': 23, 'examples': ['NR_02', 'NR_05', 'NR_06', 'NR_07', 'NR_08'], 'network proximity': 0.043111}  refs=0
-  Abdul Malik - Noordin Mohammed Top  score=0.041  {'shared contacts': 1, 'examples': ['NR_16'], 'network proximity': 0.041248}  refs=0
-  Aceng Kurnia - Noordin Mohammed Top  score=0.041  {'shared contacts': 1, 'examples': ['NR_16'], 'network proximity': 0.041248}  refs=0
-  Abdul Rauf - Noordin Mohammed Top  score=0.041  {'shared contacts': 16, 'examples': ['NR_05', 'NR_17', 'NR_22', 'NR_23', 'NR_24'], 'network proximity': 0.041199}  refs=0
+hidden_link_ranker: 50 suggestions; top 5
+  Azhari Husin - Suramto  score=0.991  {'shared contacts': 23, 'examples': ['NR_02', 'NR_05', 'NR_06', 'NR_07', 'NR_08'], 'network proximity (percentile)': 1.0, 'same group': False, 'learned ranker (percentile)': 1.0}  refs=0
+  Abu Bakar Ba'asyir - Noordin Mohammed Top  score=0.990  {'shared contacts': 20, 'examples': ['NR_03', 'NR_05', 'NR_11', 'NR_13', 'NR_22'], 'network proximity (percentile)': 1.0, 'same group': False, 'learned ranker (percentile)': 1.0}  refs=0
+  Abdul Rauf - Noordin Mohammed Top  score=0.986  {'shared contacts': 16, 'examples': ['NR_05', 'NR_17', 'NR_22', 'NR_23', 'NR_24'], 'network proximity (percentile)': 0.998, 'same group': False, 'learned ranker (percentile)': 0.999}  refs=0
+  Harun - Suramto  score=0.979  {'shared contacts': 14, 'examples': ['NR_04', 'NR_08', 'NR_10', 'NR_19', 'NR_21'], 'network proximity (percentile)': 0.99, 'same group': False, 'learned ranker (percentile)': 0.999}  refs=0
+  Ahmad Rofiq Ridho - Suramto  score=0.977  {'shared contacts': 12, 'examples': ['NR_04', 'NR_05', 'NR_06', 'NR_21', 'NR_24'], 'network proximity (percentile)': 0.987, 'same group': True, 'learned ranker (percentile)': 0.998}  refs=0
 
 tie_without_recorded_communication: 50 suggestions; top 5
   Apuy - Iwan Dharmawan  score=1.800  {'CLASSMATES': 0.2, 'FRIENDSHIP': 1.0, 'OPERATIONS': 0.3, 'TRAININGEVENTS': 0.3, 'basis': 'observed'}  refs=0

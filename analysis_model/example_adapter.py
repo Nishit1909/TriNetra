@@ -14,7 +14,7 @@ import psycopg
 
 from .run_case_analysis import load_weights, run_case_analysis
 
-WEIGHTS = Path(__file__).resolve().parent / "weights" / "v1_1.json"
+WEIGHTS = Path(__file__).resolve().parent / "weights" / "v1_2.json"
 
 
 def load_inputs(conn, case_id: str) -> tuple[pd.DataFrame, pd.DataFrame]:

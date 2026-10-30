@@ -21,8 +21,9 @@ import benchmark_link_methods as H  # noqa: E402  (harness: loaders, evaluate, t
 from analysis_model import load_weights, run_case_analysis  # noqa: E402
 
 SRC, NOORDIN, OUT = Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3])
-W = load_weights(ROOT / "analysis_model" / "weights" / "v1_1.json")
+W = load_weights(ROOT / "analysis_model" / "weights" / "v1_2.json")
 W["link_prediction"]["max_per_method"] = 10 ** 9          # return full rankings for evaluation
+W["link_prediction"]["ranker_mode"] = "ppr"               # this script verifies the PPR method; the learned ranker is verified by verify_ranker_parity.py
 
 
 def fn_scores(G, pairs, method, rel_type="INTERCEPTED_COMMUNICATION"):

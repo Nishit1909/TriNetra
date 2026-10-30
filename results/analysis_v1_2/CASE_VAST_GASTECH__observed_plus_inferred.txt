@@ -61,12 +61,12 @@ MC1_764FD0C5F827 Rachel Pantanal     0.051524          C03
 
 Communities: {'C00': 14, 'C01': 13, 'C02': 11, 'C03': 8, 'C05': 4, 'C04': 4}
 
-network_proximity_ppr: 50 suggestions; top 5
-  Brand Tempestad - Willem Vasco-Pais  score=0.038  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005'], 'network proximity': 0.038229}  refs=0
-  Kare Orilla - Felix Resumir  score=0.038  {'shared contacts': 30, 'examples': ['MC1_44D5D7C163BE', 'P0002', 'P0004', 'P0005', 'P0006'], 'network proximity': 0.038204}  refs=0
-  Felix Balas - Hideki Cocinaro  score=0.038  {'shared contacts': 29, 'examples': ['P0001', 'P0004', 'P0005', 'P0006', 'P0007'], 'network proximity': 0.03806}  refs=0
-  Ingrid Barranco - Lidelse Dedos  score=0.038  {'shared contacts': 29, 'examples': ['P0001', 'P0002', 'P0003', 'P0005', 'P0006'], 'network proximity': 0.037616}  refs=0
-  Isak Baza - Linnea Bergen  score=0.038  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0007'], 'network proximity': 0.037588}  refs=0
+hidden_link_ranker: 50 suggestions; top 5
+  Kare Orilla - Felix Resumir  score=0.989  {'shared contacts': 30, 'examples': ['MC1_44D5D7C163BE', 'P0002', 'P0004', 'P0005', 'P0006'], 'network proximity (percentile)': 0.999, 'same group': True, 'learned ranker (percentile)': 1.0}  refs=0
+  Isak Baza - Linnea Bergen  score=0.986  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0007'], 'network proximity (percentile)': 0.995, 'same group': True, 'learned ranker (percentile)': 0.999}  refs=0
+  Ada Campo-Corrente - Sven Flecha  score=0.985  {'shared contacts': 29, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005'], 'network proximity (percentile)': 0.992, 'same group': True, 'learned ranker (percentile)': 0.997}  refs=0
+  Felix Balas - Hideki Cocinaro  score=0.983  {'shared contacts': 29, 'examples': ['P0001', 'P0004', 'P0005', 'P0006', 'P0007'], 'network proximity (percentile)': 0.997, 'same group': True, 'learned ranker (percentile)': 0.996}  refs=0
+  Nils Calixto - Felix Resumir  score=0.983  {'shared contacts': 29, 'examples': ['P0002', 'P0004', 'P0005', 'P0006', 'P0007'], 'network proximity (percentile)': 0.988, 'same group': True, 'learned ranker (percentile)': 0.995}  refs=0
 
 tie_without_recorded_communication: 50 suggestions; top 5
   Ingrid Barranco - Hennie Osvaldo  score=0.655  {'private meeting days (2)': 6.0, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33, 'basis': 'inferred'}  refs=24

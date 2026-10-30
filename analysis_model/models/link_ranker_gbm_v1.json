@@ -1,0 +1,140 @@
+{
+ "name": "link_ranker_gbm_v1",
+ "use": "hidden_link_ranker in run_case_analysis (ranker_mode 'model'; 'blend' adds percentile(PPR))",
+ "format": "JSON tree ensemble (analysis_model/tree_model.py), exported from the trained sklearn model; identical predictions",
+ "features": [
+  "cn",
+  "aa",
+  "ra",
+  "jaccard",
+  "pa",
+  "katz3",
+  "local_path",
+  "ppr",
+  "inv_distance",
+  "same_community",
+  "deg_min",
+  "deg_max",
+  "clust_min",
+  "clust_max"
+ ],
+ "feature_transform": "percentile rank within the case (analysis_model.link_features.to_percentiles)",
+ "model": "sklearn HistGradientBoostingClassifier",
+ "params": {
+  "max_iter": 200,
+  "learning_rate": 0.05,
+  "max_leaf_nodes": 15,
+  "l2_regularization": 1.0,
+  "random_state": 0
+ },
+ "class_weighting": "positives weighted to balance",
+ "sklearn_version": "1.9.1",
+ "numpy_version": "2.5.3",
+ "trained_on": {
+  "units": 206,
+  "pairs": 188140,
+  "positives": 3805,
+  "networks": [
+   "covert_1",
+   "covert_10",
+   "covert_11",
+   "covert_12",
+   "covert_13",
+   "covert_15",
+   "covert_16",
+   "covert_2",
+   "covert_20",
+   "covert_21",
+   "covert_24",
+   "covert_26",
+   "covert_28",
+   "covert_29",
+   "covert_30",
+   "covert_31",
+   "covert_32",
+   "covert_37",
+   "covert_39",
+   "covert_4",
+   "covert_41",
+   "covert_46",
+   "covert_47",
+   "covert_6"
+  ],
+  "tasks": {
+   "B_predict_ahead": 36,
+   "C_edge_hiding": 170
+  }
+ },
+ "performance_estimate_leave_one_network_out": {
+  "protocol": "leave-one-group-out; networks sharing people held out together",
+  "model": {
+   "B_predict_ahead": {
+    "mean_ap_lift": 2.632,
+    "ppr_mean_ap_lift": 2.862,
+    "unit_wins": 18,
+    "units": 36,
+    "ci95": [
+     -0.546,
+     0.023
+    ],
+    "network_wins": "4/8",
+    "network_ci95": [
+     -0.445,
+     0.072
+    ],
+    "mean_p10": 0.305,
+    "ppr_mean_p10": 0.3
+   },
+   "C_edge_hiding": {
+    "mean_ap_lift": 11.432,
+    "ppr_mean_ap_lift": 8.781,
+    "unit_wins": 119,
+    "units": 170,
+    "ci95": [
+     1.807,
+     3.51
+    ],
+    "network_wins": "12/17",
+    "network_ci95": [
+     0.388,
+     4.881
+    ],
+    "mean_p10": 0.373,
+    "ppr_mean_p10": 0.353
+   }
+  },
+  "blend": {
+   "B_predict_ahead": {
+    "mean_ap_lift": 2.817,
+    "ppr_mean_ap_lift": 2.862,
+    "unit_wins": 21,
+    "units": 36,
+    "ci95": [
+     -0.233,
+     0.116
+    ],
+    "network_wins": "4/8",
+    "network_ci95": [
+     -0.227,
+     0.143
+    ]
+   },
+   "C_edge_hiding": {
+    "mean_ap_lift": 9.34,
+    "ppr_mean_ap_lift": 8.781,
+    "unit_wins": 104,
+    "units": 170,
+    "ci95": [
+     0.251,
+     0.876
+    ],
+    "network_wins": "11/17",
+    "network_ci95": [
+     -0.12,
+     1.245
+    ]
+   }
+  }
+ },
+ "trees_sha256": "bc172ddb5cd2697dc2acc7c22360f26b0186dd518373ff65aca54e25466bd91f"
+}

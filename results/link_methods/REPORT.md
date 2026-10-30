@@ -1,5 +1,7 @@
 # Link-method benchmark for `run_case_analysis` (weights v1.1)
 
+> **Superseded for unconnected pairs:** v1.2 replaces personalised PageRank with a learned ranker. See `results/learned_ranker/REPORT.md`. Test A (tie-based leads) still applies.
+
 **Question:** which link-suggestion methods should the app use, and how well do they perform on real covert networks?
 
 **Decision:**
