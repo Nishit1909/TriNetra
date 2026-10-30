@@ -1,0 +1,68 @@
+.graph-search {
+  position: relative;
+  width: 320px;
+  max-width: 100%;
+}
+
+.graph-search-input {
+  width: 100%;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line-strong);
+  color: var(--c-text);
+  font-family: var(--f-ui);
+  font-size: var(--fs-3);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+.graph-search-input::placeholder {
+  color: var(--c-text-faint);
+}
+
+.graph-search-input:focus-visible {
+  outline: 2px solid var(--c-signal);
+  outline-offset: -1px;
+}
+
+.graph-search-results {
+  position: absolute;
+  top: calc(100% + 1px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: var(--c-overlay);
+  backdrop-filter: blur(var(--blur-overlay));
+  -webkit-backdrop-filter: blur(var(--blur-overlay));
+  border: 1px solid var(--c-line-strong);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.graph-search-result {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--c-line);
+  padding: var(--sp-2) var(--sp-3);
+  font-family: inherit;
+  font-size: var(--fs-3);
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.graph-search-result:hover,
+.graph-search-result:focus-visible {
+  background: var(--c-surface-raised);
+}
+
+.graph-search-result-name {
+  display: flex;
+  align-items: center;
+}

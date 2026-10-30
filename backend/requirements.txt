@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pydantic-settings
+neo4j
+psycopg[binary]
+networkx
+numpy
+pandas
+scikit-learn
+xgboost
+rapidfuzz
+joblib
+python-multipart
