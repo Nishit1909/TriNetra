@@ -15,6 +15,8 @@ import {
   Plus,
   Search,
   Send,
+  KeyRound,
+  LogOut,
 } from 'lucide-react';
 import { api } from '../../api/client';
 import {
@@ -56,6 +58,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
   const [newName, setNewName] = useState('');
   const [newRole, setNewRole] = useState<'viewer' | 'investigator' | 'admin'>('investigator');
   const [newBadge, setNewBadge] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [sessions, setSessions] = useState<Record<string, any>[]>([]);
+  const [resetFor, setResetFor] = useState<string | null>(null);
+  const [resetPassword, setResetPassword] = useState('');
 
   // Assign Case Member Form
   const [assignUserId, setAssignUserId] = useState('');
@@ -71,7 +77,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
     setLoading(true);
     Promise.all([
       api.getAdminAccessSummary(24),
-      api.getAdminAlerts({ status: alertStatusFilter || undefined }),
+      api.getAdminAlerts({ status: alertStatusFilter || 'all' }),
       api.getAdminAccessLog({
         case_id: logCaseFilter || undefined,
         allowed: logAllowedFilter || undefined,
@@ -79,8 +85,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
       api.getAdminUsers(),
       api.runConflictCheck(false),
       api.getAdminSettings(),
+      api.getAdminSessions().catch(() => []),
     ])
-      .then(([sumRes, alRes, logRes, usrRes, coiRes, setRes]) => {
+      .then(([sumRes, alRes, logRes, usrRes, coiRes, setRes, sesRes]) => {
+        setSessions(sesRes || []);
         setSummary(sumRes);
         setAlerts(alRes.items || []);
         setLogs(logRes.items || []);
@@ -90,7 +98,21 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
         setSettings(setRes);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        setLoading(false);
+        onToast(err?.message || 'Could not load the admin portal', 'crimson');
+      });
+  };
+
+  /** Runs an admin action, reports failures as a toast instead of an unhandled error, then refreshes. */
+  const act = async (fn: () => Promise<unknown>, success: string, tone: 'cyan' | 'emerald' | 'amber' = 'emerald') => {
+    try {
+      await fn();
+      onToast(success, tone);
+      loadAll();
+    } catch (err: any) {
+      onToast(err?.message || 'Action failed', 'crimson');
+    }
   };
 
   useEffect(() => {
@@ -103,7 +125,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
         <Lock className="w-10 h-10 text-[#ff3b5c] mx-auto" />
         <h2 className="text-lg font-bold text-white">Administrator Portal Restricted</h2>
         <p className="text-xs text-slate-300 max-w-md mx-auto">
-          Only Cyber Cell Administrators can view security alerts, append-only access logs, user permissions, and SMTP settings. Switch to "Demo Admin (Cyber Cell)" in the top-right switcher.
+          Only administrators can view security alerts, the access log, user permissions and SMTP settings. Sign in with an administrator account to continue.
         </p>
       </GlassCard>
     );
@@ -119,17 +141,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
         return <Eye className="w-4 h-4 text-[#ffb020]" />;
       case 'after_hours':
         return <Moon className="w-4 h-4 text-[#ffb020]" />;
+      case 'failed_login':
+        return <KeyRound className="w-4 h-4 text-[#ff3b5c]" />;
       default:
         return <Upload className="w-4 h-4 text-[#22d3ee]" />;
     }
   };
 
-  const handleReviewAlert = async (alertId: number, status: 'acknowledged' | 'dismissed') => {
-    const note = alertNoteMap[alertId] || '';
-    await api.reviewAdminAlert(alertId, { status, note });
-    onToast(`Alert #${alertId} ${status}`, 'emerald');
-    loadAll();
-  };
+  const handleReviewAlert = (alertId: number, status: 'acknowledged' | 'dismissed') =>
+    act(() => api.reviewAdminAlert(alertId, { status, note: alertNoteMap[alertId] || '' }), `Alert #${alertId} ${status}`);
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,10 +160,12 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
         display_name: newName,
         role: newRole,
         badge_number: newBadge || undefined,
+        password: newPassword || undefined,
       });
       setNewEmail('');
       setNewName('');
       setNewBadge('');
+      setNewPassword('');
       onToast(`Created user ${newName}`, 'emerald');
       loadAll();
     } catch (err: any) {
@@ -154,13 +176,10 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
   const handleAssignCase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignUserId || !assignCaseId) return;
-    await api.assignCaseMember({
-      user_id: assignUserId,
-      case_id: assignCaseId,
-      access_level: assignLevel,
-    });
-    onToast(`Assigned ${assignLevel} access on ${assignCaseId}`, 'emerald');
-    loadAll();
+    await act(
+      () => api.assignCaseMember({ user_id: assignUserId, case_id: assignCaseId, access_level: assignLevel }),
+      `Assigned ${assignLevel} access on ${assignCaseId}`,
+    );
   };
 
   return (
@@ -566,6 +585,15 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                   onChange={(e) => setNewBadge(e.target.value)}
                   placeholder="Badge number (optional)"
                 />
+                <GlassInput
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Initial password (10+ chars, letters and numbers)"
+                  className="sm:col-span-2"
+                  aria-label="Initial password"
+                />
                 <div className="sm:col-span-2 flex justify-end">
                   <GlassButton type="submit" variant="primary" size="sm">
                     Create User
@@ -648,11 +676,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                       <td className="py-3 px-4">
                         <GlassSelect
                           value={u.role}
-                          onChange={async (e) => {
-                            await api.updateAdminUser(u.user_id, { role: e.target.value as any });
-                            onToast(`Updated role for ${u.display_name}`, 'cyan');
-                            loadAll();
-                          }}
+                          onChange={(e) =>
+                            act(() => api.updateAdminUser(u.user_id, { role: e.target.value as any }), `Updated role for ${u.display_name} (their sessions were ended)`, 'cyan')
+                          }
                           className="py-1 px-2 text-xs"
                           aria-label={`Role for ${u.display_name}`}
                         >
@@ -673,15 +699,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                               >
                                 {m.case_id} ({m.access_level})
                                 <button
-                                  onClick={async () => {
-                                    await api.removeCaseMember({
-                                      user_id: u.user_id,
-                                      case_id: m.case_id,
-                                      access_level: m.access_level,
-                                    });
-                                    onToast(`Removed ${m.case_id} from ${u.display_name}`, 'amber');
-                                    loadAll();
-                                  }}
+                                  onClick={() =>
+                                    act(
+                                      () => api.removeCaseMember({ user_id: u.user_id, case_id: m.case_id, access_level: m.access_level }),
+                                      `Removed ${m.case_id} from ${u.display_name}`,
+                                      'amber',
+                                    )
+                                  }
+                                  aria-label={`Remove ${m.case_id} access from ${u.display_name}`}
                                   className="text-rose-400 hover:text-rose-200 ml-1"
                                   title="Revoke case access"
                                 >
@@ -693,23 +718,104 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                         )}
                       </td>
                       <td className="py-3 px-4 text-right">
-                        <GlassButton
-                          size="sm"
-                          variant={u.active ? 'emerald' : 'crimson'}
-                          onClick={async () => {
-                            await api.updateAdminUser(u.user_id, { active: !u.active });
-                            onToast(`${u.display_name} ${!u.active ? 'activated' : 'deactivated'}`, 'cyan');
-                            loadAll();
-                          }}
-                        >
-                          {u.active ? 'Active' : 'Disabled'}
-                        </GlassButton>
+                        <div className="flex flex-col items-end gap-1.5">
+                          <GlassButton
+                            size="sm"
+                            variant={u.active ? 'emerald' : 'crimson'}
+                            title={u.active ? 'Click to deactivate (ends their sessions)' : 'Click to activate'}
+                            onClick={() =>
+                              act(() => api.updateAdminUser(u.user_id, { active: !u.active }), `${u.display_name} ${!u.active ? 'activated' : 'deactivated'}`, 'cyan')
+                            }
+                          >
+                            {u.active ? 'Active' : 'Disabled'}
+                          </GlassButton>
+                          {resetFor === u.user_id ? (
+                            <form
+                              className="flex items-center gap-1.5"
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                act(() => api.resetUserPassword(u.user_id, resetPassword), `Password reset for ${u.display_name}`).then(() => {
+                                  setResetFor(null);
+                                  setResetPassword('');
+                                });
+                              }}
+                            >
+                              <GlassInput
+                                type="password"
+                                autoComplete="new-password"
+                                value={resetPassword}
+                                onChange={(e) => setResetPassword(e.target.value)}
+                                placeholder="New password"
+                                aria-label={`New password for ${u.display_name}`}
+                                className="w-40 py-1 text-xs"
+                              />
+                              <GlassButton size="sm" type="submit" variant="primary">Save</GlassButton>
+                              <button type="button" className="text-xs text-slate-400 hover:text-white" onClick={() => setResetFor(null)}>
+                                Cancel
+                              </button>
+                            </form>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setResetFor(u.user_id);
+                                setResetPassword('');
+                              }}
+                              className="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-white"
+                            >
+                              <KeyRound className="w-3 h-3" /> {u.has_password ? 'Reset password' : 'Set password'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </GlassCard>
+
+          <GlassCard className="p-5 space-y-3">
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-[#22d3ee]" /> Signed-in sessions ({sessions.length})
+            </h2>
+            {sessions.length === 0 ? (
+              <p className="text-xs text-slate-400">Nobody is signed in with a password session right now.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="text-slate-400">
+                    <tr>
+                      <th className="text-left py-2 px-3 font-medium">User</th>
+                      <th className="text-left py-2 px-3 font-medium">Role</th>
+                      <th className="text-left py-2 px-3 font-medium">Signed in</th>
+                      <th className="text-left py-2 px-3 font-medium">Last active</th>
+                      <th className="text-left py-2 px-3 font-medium">From</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sessions.map((s) => (
+                      <tr key={s.session_id} className="border-t border-white/[0.06]">
+                        <td className="py-2 px-3 text-white">
+                          {s.display_name}
+                          <div className="font-mono text-[11px] text-slate-500">{s.email}</div>
+                        </td>
+                        <td className="py-2 px-3">{s.role}</td>
+                        <td className="py-2 px-3 font-mono">{formatIST(s.created_at).formatted}</td>
+                        <td className="py-2 px-3 font-mono">{formatIST(s.last_seen_at).formatted}</td>
+                        <td className="py-2 px-3 font-mono text-slate-400">{s.client_ip || '—'}</td>
+                        <td className="py-2 px-3 text-right">
+                          <GlassButton size="sm" variant="crimson" onClick={() => act(() => api.revokeAdminSession(s.session_id), `Signed out ${s.email}`, 'amber')}>
+                            <LogOut className="w-3.5 h-3.5" /> End session
+                          </GlassButton>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </GlassCard>
         </div>
       ) : tab === 'conflicts' ? (
@@ -724,9 +830,14 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
             <GlassButton
               variant="crimson"
               onClick={async () => {
-                const res = await api.runConflictCheck(true);
-                setConflicts(res.conflicts || []);
-                onToast(`COI check completed: ${res.conflicts.length} match(es) flagged`, 'crimson');
+                try {
+                  const res = await api.runConflictCheck(true);
+                  setConflicts(res.conflicts || []);
+                  onToast(`Conflict check done: ${res.conflicts.length} match(es) flagged`, res.conflicts.length ? 'crimson' : 'emerald');
+                  loadAll();
+                } catch (err: any) {
+                  onToast(err?.message || 'Conflict check failed', 'crimson');
+                }
               }}
             >
               <Search className="w-4 h-4" /> Run COI Check & Raise High Alerts
@@ -842,10 +953,7 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                 <GlassButton
                   variant="primary"
                   size="sm"
-                  onClick={async () => {
-                    await api.saveAlertRules(settings.alert_rules);
-                    onToast('Saved alert rules configuration', 'emerald');
-                  }}
+                  onClick={() => act(() => api.saveAlertRules(settings.alert_rules), 'Saved alert rules')}
                 >
                   Save Alert Rules
                 </GlassButton>
@@ -968,12 +1076,16 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                   size="sm"
                   variant="secondary"
                   onClick={async () => {
-                    const res = await api.testSmtpEmail();
-                    setSmtpTestResult({
-                      sent: res.sent,
-                      message: res.sent ? `Test email sent to ${res.to?.join(', ')}` : res.error || 'Failed',
-                    });
-                    onToast(res.sent ? 'Test email dispatched' : 'SMTP test reported status', res.sent ? 'emerald' : 'amber');
+                    try {
+                      const res = await api.testSmtpEmail();
+                      setSmtpTestResult({
+                        sent: res.sent,
+                        message: res.sent ? `Test email sent to ${res.to?.join(', ')}` : res.error || 'Failed',
+                      });
+                      onToast(res.sent ? 'Test email sent' : 'Test email was not sent; see the message below', res.sent ? 'emerald' : 'amber');
+                    } catch (err: any) {
+                      setSmtpTestResult({ sent: false, message: err?.message || 'Request failed' });
+                    }
                   }}
                 >
                   <Send className="w-3.5 h-3.5" /> Send Test E-mail
@@ -981,10 +1093,9 @@ export const AdminView: React.FC<AdminViewProps> = ({ isAdmin, cases, onToast })
                 <GlassButton
                   size="sm"
                   variant="primary"
-                  onClick={async () => {
+                  onClick={() => {
                     const { password_configured, password_source, ...payload } = settings.smtp;
-                    await api.saveSmtpSettings(payload);
-                    onToast('Saved SMTP settings', 'emerald');
+                    return act(() => api.saveSmtpSettings(payload), 'Saved SMTP settings');
                   }}
                 >
                   Save SMTP Config

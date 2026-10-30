@@ -220,11 +220,11 @@ class AlertReview(BaseModel):
 
 
 @router.get("/alerts")
-def list_alerts(status: Literal["open", "acknowledged", "dismissed"] | None = "open",
+def list_alerts(status: Literal["open", "acknowledged", "dismissed", "all"] | None = "open",
                 severity: Literal["low", "medium", "high"] | None = None, rule: str | None = None,
                 limit: int = Query(100, ge=1, le=500), offset: int = Query(0, ge=0), p=Depends(require_admin)):
     where, vals = [], []
-    for col, v in (("status", status), ("severity", severity), ("rule", rule)):
+    for col, v in (("status", None if status == "all" else status), ("severity", severity), ("rule", rule)):
         if v is not None:
             where.append(f"{col}=%s"); vals.append(v)
     w = ("WHERE " + " AND ".join(where)) if where else ""

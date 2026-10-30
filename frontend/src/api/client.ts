@@ -267,6 +267,7 @@ export const api = {
     badge_number?: string;
     phone?: string;
     is_demo?: boolean;
+    password?: string;
   }) => request<AdminUser>('/api/admin/users', json(body)),
   updateAdminUser: (userId: string, body: { role?: 'viewer' | 'investigator' | 'admin'; active?: boolean }) =>
     request<AdminUser>(`/api/admin/users/${enc(userId)}`, json(body)),

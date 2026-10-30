@@ -158,10 +158,15 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
   const runTime = formatIST(latestRun?.completed_at || latestRun?.started_at);
 
   const handleReviewMention = async (mentionId: number, status: 'confirmed' | 'rejected') => {
-    await api.reviewDocumentMention(caseId, mentionId, {
-      status,
-      reason: `Analyst ${status} entity mention in ${selectedDocId}`,
-    });
+    try {
+      await api.reviewDocumentMention(caseId, mentionId, {
+        status,
+        reason: `Analyst ${status} entity mention in ${selectedDocId}`,
+      });
+    } catch (err: any) {
+      onToast?.(err?.message || 'Could not save the review', 'crimson');
+      return;
+    }
     if (docData?.mentions) {
       setDocData({
         ...docData,

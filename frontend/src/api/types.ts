@@ -388,6 +388,8 @@ export interface AdminUser {
   requests_24h: number;
   open_alerts: number;
   cases: 'all (admin)' | { case_id: string; access_level: 'viewer' | 'editor' }[];
+  has_password?: boolean;
+  last_login_at?: string | null;
 }
 
 export interface AccessSummaryResponse {

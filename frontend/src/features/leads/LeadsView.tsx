@@ -35,10 +35,13 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
   const [inferredMeetings, setInferredMeetings] = useState<InferredRelationship[]>([]);
   const [personsMap, setPersonsMap] = useState<Map<string, PersonRecord>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [runModeNote, setRunModeNote] = useState<string | null>(null);
   const [selectedPair, setSelectedPair] = useState<{ a: string; b: string; link?: PredictedLink } | null>(null);
 
   const loadData = () => {
     setLoading(true);
+    setLoadError(null);
     Promise.all([
       api.getPersons(caseId, { limit: 100 }),
       api.listAnalysisRuns(caseId),
@@ -49,7 +52,13 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
       setPersonsMap(pMap);
       setInferredMeetings(leadsRes.items || []);
 
-      const targetRun = runs.find((r) => r.mode === mode) || runs[0];
+      const sameMode = runs.find((r) => r.mode === mode && (r.status === 'completed' || r.status === 'partial'));
+      const targetRun = sameMode || runs.find((r) => r.status === 'completed' || r.status === 'partial');
+      setRunModeNote(
+        targetRun && !sameMode
+          ? `No analysis has been run in ${mode === 'observed_only' ? 'Observed only' : 'Observed + inferred'} mode yet, so these are the results of the latest ${targetRun.mode === 'observed_only' ? 'Observed only' : 'Observed + inferred'} run. Use Run analysis for this mode.`
+          : null,
+      );
       if (targetRun) {
         setRunId(targetRun.analysis_run_id);
         const linksRes = await api.getPredictedLinks(caseId, targetRun.analysis_run_id, { limit: 100 });
@@ -60,6 +69,9 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
         setPredictedLinks([]);
       }
       setLoading(false);
+    }).catch((err) => {
+      setLoading(false);
+      setLoadError(err?.message || 'Could not load leads.');
     });
   };
 
@@ -86,6 +98,15 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
 
   return (
     <div className="space-y-5">
+      {loadError && (
+        <div role="alert" className="rounded-[14px] border border-[#ff3b5c]/35 bg-[#ff3b5c]/10 px-4 py-3 text-sm text-[#ff9aab] flex items-center justify-between gap-3">
+          <span>{loadError}</span>
+          <button onClick={loadData} className="px-3 py-1 rounded-[10px] border border-white/20 text-white text-xs hover:bg-white/10">Retry</button>
+        </div>
+      )}
+      {runModeNote && (
+        <div className="rounded-[14px] border border-amber-400/30 bg-amber-400/[0.07] px-4 py-3 text-sm text-amber-200">{runModeNote}</div>
+      )}
       {/* Header & Tabs */}
       <GlassCard className="p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
