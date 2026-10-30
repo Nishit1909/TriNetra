@@ -1594,6 +1594,888 @@
     }
    }
   },
+  "/api/case-uploads/template": {
+   "get": {
+    "tags": [
+     "ingestion"
+    ],
+    "summary": "Upload Template",
+    "description": "What to upload. The frontend can show this as help text.",
+    "operationId": "upload_template_api_case_uploads_template_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/case-uploads/validate": {
+   "post": {
+    "tags": [
+     "ingestion"
+    ],
+    "summary": "Validate Upload",
+    "description": "Dry run: checks the files and returns the report. Writes nothing.",
+    "operationId": "validate_upload_api_case_uploads_validate_post",
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_validate_upload_api_case_uploads_validate_post"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/case-uploads": {
+   "post": {
+    "tags": [
+     "ingestion"
+    ],
+    "summary": "Create Case From Upload",
+    "description": "Validate, then create a NEW case. On any validation error nothing is written and the report is returned (422).",
+    "operationId": "create_case_from_upload_api_case_uploads_post",
+    "requestBody": {
+     "content": {
+      "multipart/form-data": {
+       "schema": {
+        "$ref": "#/components/schemas/Body_create_case_from_upload_api_case_uploads_post"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/users": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "List Users",
+    "operationId": "list_users_api_admin_users_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   },
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Create User",
+    "operationId": "create_user_api_admin_users_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UserIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/users/{user_id}": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Update User",
+    "operationId": "update_user_api_admin_users__user_id__post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "User Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UserUpdate"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/case-members": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Set Case Member",
+    "operationId": "set_case_member_api_admin_case_members_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MemberIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/case-members/remove": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Remove Case Member",
+    "operationId": "remove_case_member_api_admin_case_members_remove_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/MemberIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/access-log": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Access Log",
+    "operationId": "access_log_api_admin_access_log_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "user_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "uuid"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "User Id"
+      }
+     },
+     {
+      "name": "case_id",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Case Id"
+      }
+     },
+     {
+      "name": "action",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Action"
+      }
+     },
+     {
+      "name": "allowed",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "boolean"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Allowed"
+      }
+     },
+     {
+      "name": "since",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date-time"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Since"
+      }
+     },
+     {
+      "name": "until",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string",
+         "format": "date-time"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Until"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 1000,
+       "minimum": 1,
+       "default": 100,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/access-summary": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Access Summary",
+    "description": "Who used the system, when, and what they touched, over the last N hours.",
+    "operationId": "access_summary_api_admin_access_summary_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "hours",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 720,
+       "minimum": 1,
+       "default": 24,
+       "title": "Hours"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/alerts": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "List Alerts",
+    "operationId": "list_alerts_api_admin_alerts_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "open",
+          "acknowledged",
+          "dismissed"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": "open",
+       "title": "Status"
+      }
+     },
+     {
+      "name": "severity",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "enum": [
+          "low",
+          "medium",
+          "high"
+         ],
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Severity"
+      }
+     },
+     {
+      "name": "rule",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Rule"
+      }
+     },
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "maximum": 500,
+       "minimum": 1,
+       "default": 100,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "offset",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "minimum": 0,
+       "default": 0,
+       "title": "Offset"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/alerts/{alert_id}/review": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Review Alert",
+    "operationId": "review_alert_api_admin_alerts__alert_id__review_post",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "alert_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "integer",
+       "title": "Alert Id"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AlertReview"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/conflicts": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Conflicts",
+    "description": "Check every non-admin user against the cases they can open: name or e-mail matching a case subject.",
+    "operationId": "conflicts_api_admin_conflicts_get",
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ],
+    "parameters": [
+     {
+      "name": "raise_alerts",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "boolean",
+       "default": false,
+       "title": "Raise Alerts"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/api/admin/settings": {
+   "get": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Get Settings",
+    "operationId": "get_settings_api_admin_settings_get",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/settings/alert-rules": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Set Rules",
+    "operationId": "set_rules_api_admin_settings_alert_rules_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RulesIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/settings/smtp": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Set Smtp",
+    "operationId": "set_smtp_api_admin_settings_smtp_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SmtpIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
+  "/api/admin/settings/smtp/test": {
+   "post": {
+    "tags": [
+     "admin"
+    ],
+    "summary": "Test Smtp",
+    "operationId": "test_smtp_api_admin_settings_smtp_test_post",
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     }
+    },
+    "security": [
+     {
+      "HTTPBearer": []
+     }
+    ]
+   }
+  },
   "/health": {
    "get": {
     "tags": [
@@ -1638,6 +2520,7 @@
      "authentication"
     ],
     "summary": "Me",
+    "description": "Who is calling, their portal role and which cases they can open (drives which view the UI shows).",
     "operationId": "me_api_auth_me_get",
     "responses": {
      "200": {
@@ -1683,6 +2566,29 @@
  },
  "components": {
   "schemas": {
+   "AlertReview": {
+    "properties": {
+     "status": {
+      "type": "string",
+      "enum": [
+       "acknowledged",
+       "dismissed"
+      ],
+      "title": "Status"
+     },
+     "note": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Note",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "status"
+    ],
+    "title": "AlertReview"
+   },
    "AnalysisRequest": {
     "properties": {
      "mode": {
@@ -1704,6 +2610,144 @@
     "type": "object",
     "title": "AnalysisRequest"
    },
+   "Body_create_case_from_upload_api_case_uploads_post": {
+    "properties": {
+     "name": {
+      "type": "string",
+      "maxLength": 200,
+      "minLength": 3,
+      "title": "Name"
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 2000,
+      "title": "Description",
+      "default": ""
+     },
+     "role": {
+      "type": "string",
+      "enum": [
+       "investigation",
+       "benchmark",
+       "centrality_example"
+      ],
+      "title": "Role",
+      "default": "investigation"
+     },
+     "is_synthetic": {
+      "type": "boolean",
+      "title": "Is Synthetic",
+      "default": false
+     },
+     "file": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File"
+     },
+     "persons": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Persons"
+     },
+     "relationships": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relationships"
+     },
+     "communications": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Communications"
+     }
+    },
+    "type": "object",
+    "required": [
+     "name"
+    ],
+    "title": "Body_create_case_from_upload_api_case_uploads_post"
+   },
+   "Body_validate_upload_api_case_uploads_validate_post": {
+    "properties": {
+     "file": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "File"
+     },
+     "persons": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Persons"
+     },
+     "relationships": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Relationships"
+     },
+     "communications": {
+      "anyOf": [
+       {
+        "type": "string",
+        "contentMediaType": "application/octet-stream"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Communications"
+     }
+    },
+    "type": "object",
+    "title": "Body_validate_upload_api_case_uploads_validate_post"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -1716,6 +2760,34 @@
     },
     "type": "object",
     "title": "HTTPValidationError"
+   },
+   "MemberIn": {
+    "properties": {
+     "user_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "User Id"
+     },
+     "case_id": {
+      "type": "string",
+      "title": "Case Id"
+     },
+     "access_level": {
+      "type": "string",
+      "enum": [
+       "viewer",
+       "editor"
+      ],
+      "title": "Access Level"
+     }
+    },
+    "type": "object",
+    "required": [
+     "user_id",
+     "case_id",
+     "access_level"
+    ],
+    "title": "MemberIn"
    },
    "MentionReview": {
     "properties": {
@@ -1762,6 +2834,239 @@
      "status"
     ],
     "title": "ReviewRequest"
+   },
+   "RulesIn": {
+    "properties": {
+     "timezone": {
+      "type": "string",
+      "title": "Timezone",
+      "default": "Asia/Kolkata"
+     },
+     "work_hours": {
+      "items": {
+       "type": "integer"
+      },
+      "type": "array",
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Work Hours",
+      "default": [
+       8,
+       20
+      ]
+     },
+     "flag_weekends": {
+      "type": "boolean",
+      "title": "Flag Weekends",
+      "default": true
+     },
+     "bulk_window_minutes": {
+      "type": "integer",
+      "maximum": 240.0,
+      "minimum": 1.0,
+      "title": "Bulk Window Minutes",
+      "default": 10
+     },
+     "bulk_person_views": {
+      "type": "integer",
+      "maximum": 10000.0,
+      "minimum": 2.0,
+      "title": "Bulk Person Views",
+      "default": 40
+     },
+     "sensitive_actions": {
+      "items": {
+       "type": "string",
+       "enum": [
+        "upload",
+        "dismiss_lead",
+        "export",
+        "run_analysis",
+        "review_lead"
+       ]
+      },
+      "type": "array",
+      "title": "Sensitive Actions",
+      "default": [
+       "upload",
+       "dismiss_lead",
+       "export"
+      ]
+     }
+    },
+    "type": "object",
+    "title": "RulesIn"
+   },
+   "SmtpIn": {
+    "properties": {
+     "enabled": {
+      "type": "boolean",
+      "title": "Enabled",
+      "default": false
+     },
+     "host": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Host",
+      "default": ""
+     },
+     "port": {
+      "type": "integer",
+      "maximum": 65535.0,
+      "minimum": 1.0,
+      "title": "Port",
+      "default": 587
+     },
+     "username": {
+      "type": "string",
+      "maxLength": 200,
+      "title": "Username",
+      "default": ""
+     },
+     "from_address": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^$|[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "title": "From Address",
+      "default": ""
+     },
+     "to_addresses": {
+      "items": {
+       "type": "string"
+      },
+      "type": "array",
+      "maxItems": 20,
+      "title": "To Addresses"
+     },
+     "use_starttls": {
+      "type": "boolean",
+      "title": "Use Starttls",
+      "default": true
+     },
+     "use_ssl": {
+      "type": "boolean",
+      "title": "Use Ssl",
+      "default": false
+     },
+     "min_severity": {
+      "type": "string",
+      "enum": [
+       "low",
+       "medium",
+       "high"
+      ],
+      "title": "Min Severity",
+      "default": "medium"
+     }
+    },
+    "type": "object",
+    "title": "SmtpIn"
+   },
+   "UserIn": {
+    "properties": {
+     "email": {
+      "type": "string",
+      "maxLength": 200,
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "title": "Email"
+     },
+     "display_name": {
+      "type": "string",
+      "maxLength": 120,
+      "minLength": 2,
+      "title": "Display Name"
+     },
+     "role": {
+      "type": "string",
+      "enum": [
+       "viewer",
+       "investigator",
+       "admin"
+      ],
+      "title": "Role"
+     },
+     "phone": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Phone"
+     },
+     "badge_number": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 30
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Badge Number"
+     },
+     "is_demo": {
+      "type": "boolean",
+      "title": "Is Demo",
+      "default": false
+     },
+     "user_id": {
+      "anyOf": [
+       {
+        "type": "string",
+        "format": "uuid"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "User Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "email",
+     "display_name",
+     "role"
+    ],
+    "title": "UserIn"
+   },
+   "UserUpdate": {
+    "properties": {
+     "role": {
+      "anyOf": [
+       {
+        "type": "string",
+        "enum": [
+         "viewer",
+         "investigator",
+         "admin"
+        ]
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "active": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active"
+     }
+    },
+    "type": "object",
+    "title": "UserUpdate"
    },
    "ValidationError": {
     "properties": {
