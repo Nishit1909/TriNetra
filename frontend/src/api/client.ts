@@ -243,6 +243,8 @@ export const api = {
   ) => request<ValidationReport>('/api/case-uploads', { method: 'POST', body: formData }),
 
   getAdminAccessSummary: (hours = 24) => request<AccessSummaryResponse>(`/api/admin/access-summary?hours=${hours}`),
+  getLatestAlerts: (afterId: number) =>
+    request<{ items: SecurityAlert[]; latest_id: number; open: number }>(`/api/admin/alerts/latest?after_id=${afterId}`),
   getAdminAlerts: (params: { status?: string; severity?: string; rule?: string } = {}) => {
     const sp = new URLSearchParams();
     if (params.status) sp.set('status', params.status);

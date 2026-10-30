@@ -200,7 +200,7 @@ def _label(principal):
 
 def record_request(method, path, query, status_code, principal, client_ip, user_agent, request_id, duration_ms, action_override=None):
     """Write the access-log row and evaluate alert rules. Never raises into the request."""
-    if not path.startswith("/api/") or method == "OPTIONS":
+    if not path.startswith("/api/") or method == "OPTIONS" or path == "/api/admin/alerts/latest":
         return
     action, case_id, person_id = classify(method, path, query)
     action = action_override or action

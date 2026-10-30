@@ -237,6 +237,17 @@ def list_alerts(status: Literal["open", "acknowledged", "dismissed", "all"] | No
                       "note": "Alerts are flags for an administrator to review, not findings about a person."})
 
 
+@router.get("/alerts/latest")
+def latest_alerts(after_id: int = Query(0, ge=0), p=Depends(require_admin)):
+    """Light poll for the admin bell: alerts newer than after_id (oldest first) plus the open count.
+    Not written to the access log, so polling every few seconds doesn't flood it."""
+    with connect() as conn:
+        rows = conn.execute("""SELECT alert_id,at,rule,severity,user_label,case_id,title FROM inv.security_alerts
+            WHERE alert_id > %s ORDER BY alert_id LIMIT 20""", (after_id,)).fetchall()
+        top = conn.execute("SELECT COALESCE(max(alert_id),0) m, count(*) FILTER (WHERE status='open') n FROM inv.security_alerts").fetchone()
+    return json_safe({"items": rows, "latest_id": top["m"], "open": top["n"]})
+
+
 @router.post("/alerts/{alert_id}/review")
 def review_alert(alert_id: int, body: AlertReview, p=Depends(require_admin)):
     with connect() as conn:

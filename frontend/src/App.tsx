@@ -14,6 +14,7 @@ import {
   UserCheck,
   Search,
   X,
+  Bell,
 } from 'lucide-react';
 import { api, ApiError, getDemoUserId, setDemoUserId } from './api/client';
 import { LoginPage } from './features/auth/LoginPage';
@@ -64,13 +65,56 @@ export default function App() {
   const [loginNotice, setLoginNotice] = useState<string | null>(null);
   const [analysisVersion, setAnalysisVersion] = useState(0);
 
-  const addToast = (message: string, tone: ToastItem['tone'] = 'cyan') => {
+  const addToast = (message: string, tone: ToastItem['tone'] = 'cyan', ms = 3500) => {
     const id = Date.now() + Math.random();
     setToasts((prev) => [...prev.slice(-3), { id, message, tone }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3500);
+    }, ms);
   };
+
+  // Admin bell: poll for new security alerts (sign-ins, denied access, conflicts...) and pop them up live.
+  const [openAlerts, setOpenAlerts] = useState(0);
+  const [unseenAlerts, setUnseenAlerts] = useState(0);
+  const lastAlertId = useRef<number | null>(null);
+  const isAdmin = Boolean(authMe?.is_admin);
+  useEffect(() => {
+    if (!isAdmin) {
+      lastAlertId.current = null;
+      return;
+    }
+    let stopped = false;
+    const poll = async () => {
+      try {
+        const first = lastAlertId.current === null;
+        const res = await api.getLatestAlerts(first ? 0 : (lastAlertId.current as number));
+        if (stopped) return;
+        setOpenAlerts(res.open);
+        if (first) {
+          lastAlertId.current = res.latest_id;      // don't replay old alerts on page load
+          return;
+        }
+        if (res.items.length) {
+          lastAlertId.current = Math.max(lastAlertId.current as number, ...res.items.map((a) => a.alert_id));
+          setUnseenAlerts((n) => n + res.items.length);
+          res.items.slice(-3).forEach((a) => {
+            const icon = a.rule === 'user_login' ? '🔔' : a.severity === 'high' ? '🚨' : '⚠️';
+            addToast(`${icon} ${a.title}`, a.severity === 'high' ? 'crimson' : a.severity === 'medium' ? 'amber' : 'cyan', 8000);
+          });
+        }
+      } catch {
+        /* network blips: try again next tick */
+      }
+    };
+    poll();
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') poll();
+    }, 8000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [isAdmin]);
 
   const loadSession = async () => {
     try {
@@ -383,6 +427,28 @@ export default function App() {
                 <Play className="w-3.5 h-3.5" />
                 {runningAnalysis ? 'Running...' : 'Run analysis'}
               </GlassButton>
+            )}
+
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setUnseenAlerts(0);
+                  setScreen('admin');
+                }}
+                title={`${openAlerts} open alert(s)`}
+                className="relative p-2.5 rounded-[14px] bg-white/[0.07] hover:bg-white/[0.12] border border-white/[0.15] transition"
+              >
+                <Bell className={`w-4 h-4 ${unseenAlerts ? 'text-amber-300' : 'text-slate-300'}`} />
+                {(unseenAlerts || openAlerts) > 0 && (
+                  <span
+                    className={`absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold grid place-items-center ${
+                      unseenAlerts ? 'bg-rose-500 text-white animate-pulse' : 'bg-slate-600 text-slate-100'
+                    }`}
+                  >
+                    {unseenAlerts || openAlerts}
+                  </span>
+                )}
+              </button>
             )}
 
             {/* Demo Role Switcher User Chip */}
