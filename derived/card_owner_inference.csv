@@ -1,56 +1,56 @@
-card_last4,card_purchases,best_vehicle_id,best_assigned_person_id,best_score,second_vehicle_id,second_score,dominance_ratio,status,reason,person_attribution,method
-1286,32,V022,P0022,3.81,V015,1.65,2.31,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-1310,33,V026,P0026,5.29,V035,1.96,2.7,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-1321,32,V011,P0011,2.76,V016,1.65,1.68,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-1415,31,V002,P0002,2.37,V016,2.23,1.06,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-1874,32,V014,P0014,3.04,V029,1.62,1.88,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-1877,30,V009,P0009,2.59,V019,2.0,1.3,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2142,33,V025,P0025,2.95,V023,1.51,1.96,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2276,12,V028,P0028,1.09,V024,0.63,1.73,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2418,28,V026,P0026,1.37,V010,1.26,1.08,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2463,32,V035,P0035,3.08,V019,1.72,1.79,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2540,31,V007,P0007,2.96,V016,2.51,1.18,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-2681,29,V015,P0015,1.6,V027,1.54,1.04,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-3484,35,V023,P0023,4.34,V028,1.51,2.87,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-3492,29,V027,P0027,2.88,V030,1.43,2.02,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-3506,11,V009,P0009,2.06,V028,2.02,1.02,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-3547,20,V029,P0029,1.8,V019,1.26,1.43,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-3853,33,V015,P0015,3.45,V017,1.55,2.23,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-4434,32,V024,P0024,3.64,V027,1.61,2.26,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-4530,10,V028,P0028,2.0,V024,1.88,1.06,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-4795,32,V034,P0034,3.5,V006,1.52,2.3,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-4948,30,V012,P0012,2.95,V030,1.82,1.62,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-5010,5,V013,P0013,1.01,V031,0.94,1.07,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-5368,35,V008,P0008,1.96,V011,1.56,1.25,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-5407,31,V022,P0022,1.88,V010,1.7,1.11,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-5921,14,V029,P0029,1.42,V011,0.8,1.77,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-6691,26,V009,P0009,1.69,V001,1.36,1.24,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-6816,30,V020,P0020,3.18,V034,1.46,2.17,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-6895,31,V019,P0019,4.97,V016,1.86,2.67,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-6899,30,V005,P0005,2.74,V016,1.71,1.6,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-6901,37,V030,P0030,6.23,V013,2.19,2.84,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7108,30,V012,P0012,2.97,V030,1.76,1.69,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7117,31,V013,P0013,2.4,V012,2.13,1.13,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7253,30,V006,P0006,3.76,V023,1.63,2.31,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7354,33,V016,P0016,4.19,V007,1.4,2.98,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7384,33,V017,P0017,3.23,V015,1.47,2.2,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7688,34,V004,P0004,4.81,V034,1.99,2.41,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7792,25,V028,P0028,5.09,V024,1.8,2.83,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7819,34,V013,P0013,3.88,V030,1.97,1.97,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-7889,30,V008,P0008,2.56,V023,1.4,1.83,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8129,32,V030,P0030,1.71,V001,1.63,1.05,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8156,34,V032,P0032,5.0,V010,2.16,2.32,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8202,33,V030,P0030,1.9,V013,1.87,1.01,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8332,36,V010,P0010,6.85,V032,2.06,3.33,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8411,32,V002,P0002,1.8,V013,1.65,1.1,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-8642,15,V009,P0009,1.46,V020,1.21,1.21,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9152,4,V028,P0028,2.0,V015,0.84,2.38,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9220,10,V009,P0009,2.0,V028,1.24,1.61,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9241,19,V016,P0016,1.65,V028,1.23,1.34,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9405,32,V021,P0021,3.16,V025,1.4,2.25,inferred,,assigned_driver_assumed,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9551,28,V001,P0001,2.11,V006,1.2,1.76,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9614,4,V028,P0028,1.06,V016,0.14,7.37,unresolved,too little evidence,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9617,31,V018,P0018,3.27,V027,2.0,1.63,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9635,28,V003,P0003,1.9,V019,1.67,1.14,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9683,28,V033,P0033,2.16,V032,1.3,1.66,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
-9735,18,V028,P0028,2.0,V013,1.81,1.11,unresolved,runner-up too close,,"vehicle parked within 120 min before / 10 min after purchase, weighted by arrival/departure timing; >= 2x runner-up"
+card_last4,card_purchases,best_vehicle_id,best_assigned_person_id,best_score,second_vehicle_id,second_score,dominance_ratio,person_attribution,status,reason,method
+1286,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+1310,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+1321,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+1415,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+1874,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+1877,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2142,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2276,12,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2418,28,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2463,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2540,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+2681,29,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+3484,35,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+3492,29,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+3506,11,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+3547,20,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+3853,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+4434,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+4530,10,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+4795,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+4948,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+5010,5,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+5368,35,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+5407,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+5921,14,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+6691,26,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+6816,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+6895,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+6899,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+6901,37,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7108,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7117,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7253,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7354,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7384,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7688,34,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7792,25,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7819,34,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+7889,30,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8129,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8156,34,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8202,33,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8332,36,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8411,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+8642,15,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9152,4,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9220,10,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9241,19,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9405,32,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9551,28,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9614,4,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9617,31,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9635,28,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9683,28,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
+9735,18,,,,,,,,unresolved,merchant_locations_not_verified; purchase timing alone cannot establish card ownership,not_inferred_without_spatial_evidence
