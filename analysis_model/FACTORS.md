@@ -1,4 +1,4 @@
-# Analysis model: contract, factors and weights (v1)
+# Analysis model: contract, factors and weights (v1.1)
 
 `analysis_model.run_case_analysis(persons, edges, mode, weights)` analyses **one case**. The backend loads the case, calls the function, validates the output and saves the run. The function never touches a database.
 
@@ -11,7 +11,7 @@
 | `persons` | DataFrame: `person_id` (unique), optional `department` |
 | `edges` | DataFrame: `person_a`, `person_b`, `relationship_type`, `is_inferred` (bool), `weight` (float ≥ 0), optional `factors` (dict or JSON), optional `evidence_refs` (list or `;`-string) |
 | `mode` | `"observed_only"` (inferred edges dropped) or `"observed_plus_inferred"` |
-| `weights` | Parsed `weights/v1.json`; its `version` is echoed back |
+| `weights` | Parsed `weights/v1_1.json` (current; `v1.json` kept for history); its `version` is echoed back |
 
 **Output**
 
@@ -36,9 +36,9 @@
 2. **Graph:** one weighted edge per pair (strengths summed). Then **association strength** `w = s_ab / √(S_a · S_b)`, where `S` is a person's total strength, so one of many mass contacts counts less than an exclusive tie (the "P0001 hub" fix). **Hubs** (degree > mean + 3σ and ≥ 3) are flagged for verification, **not dropped**.
 3. **Centrality:** degree, weighted degree, PageRank on `w`, betweenness with distance `1/w` (exact up to 2,000 people, seeded sampling above).
 4. **Communities:** Leiden if `leidenalg` is installed, else seeded Louvain on `w`. Labels `C00`, `C01`… by size. They're groups of people who interact closely, not verified gangs.
-5. **Link prediction:**
-   - `inferred_without_recorded_communication` (only in `observed_plus_inferred`): pairs with an inferred tie but no observed communication of positive strength. Score = inferred strength; breakdown = factor contributions; evidence = supporting co-location IDs. This is the "meet but never communicate" lead.
-   - `adamic_adar_shared_contacts`: pairs with no edge at all, ranked by shared contacts. On Noordin, shared contacts were a much weaker signal than direct ties, so this list is secondary.
+5. **Link prediction** (methods chosen by the benchmark in `results/link_methods/REPORT.md`):
+   - `tie_without_recorded_communication`: pairs joined by a **non-communication** tie (inferred co-location, or observed meetings, friendship and similar) with no observed communication of positive strength. Score = summed evidence strength; breakdown = factor contributions plus `basis` (`inferred` / `observed`); evidence = supporting IDs. On Noordin this recovers hidden communication at about 10× random AP, far above shared-contact methods. In `observed_only` mode, inferred ties are absent, so GAStech gets no such leads there.
+   - `network_proximity_ppr`: pairs with no edge, ranked by symmetrised **personalised PageRank** (restart 0.15, unweighted transitions). Across 8 time-sliced covert networks it beat Adamic-Adar at predicting next-period links (24 of 36 transitions, 95% CI of the gain above zero), and tied on hidden-link recovery across 17 networks. Breakdown lists shared contacts and the proximity score. Cases over 3,000 people fall back to Adamic-Adar (`network_proximity_adamic_adar`).
    - Up to 50 suggestions per method, sorted by score.
 
 ## Inferred-edge factors (GAStech co-location)
@@ -70,16 +70,19 @@
 
 The weights are **hand-set and versioned**, informed by `results/noordin/report.md` and the GAStech feasibility check. They are not a trained model and not a probability of criminality. Change them by adding `weights/v2.json`; every run stores the version it used.
 
-## Example outputs (from `example_adapter.py` on schema `inv`, weights v1)
+## Example outputs (from `example_adapter.py` on schema `inv`, weights v1.1; full text in `results/analysis_v1_1/`)
 
 | Case / mode | Result |
 |---|---|
 | GAStech, observed + inferred | `ok`. Top "meet but never communicate" lead: SVP/CFO Ingrid Barranco ↔ perimeter-control officer Hennie Osvaldo (2 private days, home visit, after hours; 24 supporting events). Lunch-group pairs are discounted |
 | GAStech, observed only | `ok`, no inferred leads (as designed); broadcast-only email pairs excluded |
 | Caviar | `ok`. Subject X1 ranks first on PageRank and betweenness and is flagged as a hub to verify |
-| Noordin (all layers) | `ok`. Noordin Mohammed Top ranks first on PageRank; Azhari Husin third; both flagged as hubs |
+| Noordin (all layers) | `ok`. Noordin Mohammed Top ranks first on PageRank; Azhari Husin third; both flagged as hubs. Top tie-without-communication leads list the exact layers (e.g. FRIENDSHIP + OPERATIONS) |
 
 These rankings describe position within each network. They aren't accuracy figures.
 
 ## Tests
-`pytest analysis_model/tests` (12 tests): contract shape, mode filtering, lead breakdown and evidence, broadcast handling, failed stages reported as `partial` with errors, link-prediction failure distinguished from no findings, cross-case IDs rejected, empty case, determinism, hubs flagged not dropped.
+`pytest analysis_model/tests` (14 tests): contract shape, mode filtering, lead breakdown and evidence, broadcast handling, failed stages reported as `partial` with errors, link-prediction failure distinguished from no findings, cross-case IDs rejected, empty case, determinism, hubs flagged not dropped.
+
+## Measured performance
+See `results/link_methods/REPORT.md`. In short: tie-based leads recover hidden communication on Noordin at AP 0.68 (10.4× random, all top 10 correct). Network proximity predicts next-period links at about 2–3× random across 8 real covert networks. These are ranking-quality measures on coded networks, not crime-detection or GAStech accuracy.

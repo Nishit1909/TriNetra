@@ -61,16 +61,16 @@ MC1_764FD0C5F827 Rachel Pantanal     0.051524          C03
 
 Communities: {'C00': 14, 'C01': 13, 'C02': 11, 'C03': 8, 'C05': 4, 'C04': 4}
 
-adamic_adar_shared_contacts: 50 suggestions; top 5
-  Kare Orilla - Felix Resumir  score=8.794  {'shared contacts': 30, 'examples': ['MC1_44D5D7C163BE', 'P0002', 'P0004', 'P0005', 'P0006']}  refs=0
-  Brand Tempestad - Willem Vasco-Pais  score=8.709  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005']}  refs=0
-  Isak Baza - Linnea Bergen  score=8.681  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0007']}  refs=0
-  Felix Balas - Hideki Cocinaro  score=8.479  {'shared contacts': 29, 'examples': ['P0001', 'P0004', 'P0005', 'P0006', 'P0007']}  refs=0
-  Ada Campo-Corrente - Sven Flecha  score=8.429  {'shared contacts': 29, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005']}  refs=0
+network_proximity_ppr: 50 suggestions; top 5
+  Brand Tempestad - Willem Vasco-Pais  score=0.038  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0005'], 'network proximity': 0.038229}  refs=0
+  Kare Orilla - Felix Resumir  score=0.038  {'shared contacts': 30, 'examples': ['MC1_44D5D7C163BE', 'P0002', 'P0004', 'P0005', 'P0006'], 'network proximity': 0.038204}  refs=0
+  Felix Balas - Hideki Cocinaro  score=0.038  {'shared contacts': 29, 'examples': ['P0001', 'P0004', 'P0005', 'P0006', 'P0007'], 'network proximity': 0.03806}  refs=0
+  Ingrid Barranco - Lidelse Dedos  score=0.038  {'shared contacts': 29, 'examples': ['P0001', 'P0002', 'P0003', 'P0005', 'P0006'], 'network proximity': 0.037616}  refs=0
+  Isak Baza - Linnea Bergen  score=0.038  {'shared contacts': 30, 'examples': ['P0001', 'P0002', 'P0003', 'P0004', 'P0007'], 'network proximity': 0.037588}  refs=0
 
-inferred_without_recorded_communication: 50 suggestions; top 5
-  Ingrid Barranco - Hennie Osvaldo  score=0.655  {'private meeting days (2)': 6.0, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33}  refs=24
-  Nils Calixto - Marin Onda  score=0.600  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.286, 'more than chance': 2.5, 'seen together in public': 0.208}  refs=28
-  Ada Campo-Corrente - Isia Vann  score=0.575  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.2, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33}  refs=25
-  Linnea Bergen - Elsa Orilla  score=0.546  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.8, 'after-hours share': 1.0, 'more than chance': 2.5, 'seen together in public': 0.483}  refs=29
-  Lucas Alcazar - Marin Onda  score=0.464  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.333, 'seen together in public': 0.624}  refs=33
+tie_without_recorded_communication: 50 suggestions; top 5
+  Ingrid Barranco - Hennie Osvaldo  score=0.655  {'private meeting days (2)': 6.0, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33, 'basis': 'inferred'}  refs=24
+  Nils Calixto - Marin Onda  score=0.600  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.286, 'more than chance': 2.5, 'seen together in public': 0.208, 'basis': 'inferred'}  refs=28
+  Ada Campo-Corrente - Isia Vann  score=0.575  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.2, 'home visit': 1.5, 'after-hours share': 2.0, 'seen together in public': 0.33, 'basis': 'inferred'}  refs=25
+  Linnea Bergen - Elsa Orilla  score=0.546  {'private meeting days (2)': 6.0, 'group gatherings discount': -1.8, 'after-hours share': 1.0, 'more than chance': 2.5, 'seen together in public': 0.483, 'basis': 'inferred'}  refs=29
+  Lucas Alcazar - Marin Onda  score=0.464  {'private meeting days (5)': 15.0, 'group gatherings discount': -9.0, 'after-hours share': 0.333, 'seen together in public': 0.624, 'basis': 'inferred'}  refs=33

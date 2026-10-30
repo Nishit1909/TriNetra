@@ -100,7 +100,10 @@ def run_case_analysis(persons: pd.DataFrame,        # case_id, person_id, depart
     }
 ```
 - Backend builds `edges` from `inv.case_graph_edges` (+ `inferred_relationships.factors` for inferred rows), filtering out inferred rows when `mode = observed_only`.
-- `weights` comes from a versioned `weights.json` (delivered with the model). The version is stored in `analysis_runs.weights_version`.
+- `weights` comes from `analysis_model/weights/v1_1.json`. The version is stored in `analysis_runs.weights_version`.
+- **Delivered:** `analysis_model/run_case_analysis.py` also returns `status` (`ok`/`partial`/`failed`) and per-stage `stages` with errors; store both. Method names: `tie_without_recorded_communication`, `network_proximity_ppr`. See `analysis_model/FACTORS.md`.
+- For email pairs, pass `{"email_events", "direct_email_events"}` in `factors` (see `analysis_model/example_adapter.py`) so broadcast-only pairs carry no strength.
+- **Retire the old analytics** (`backend/app/analytics/`, including the Bitcoin-trained risk score and the GNN) from the request path, or mark it reference-only, so only one implementation runs.
 
 ## 7. Ingestion fixes (P1; only if new uploads are part of the demo)
 

@@ -1,0 +1,12 @@
+{
+ "A_noordin_function": {
+  "function_ap": 0.6758,
+  "function_p10": 1.0,
+  "function_ap_lift": 10.4105
+ },
+ "B_transitions": 36,
+ "B_function_equals_harness_ppr_max_abs_diff": 0.004870129870129941,
+ "B_mean_ap_function": 0.282,
+ "B_mean_ap_adamic_adar": 0.2501,
+ "B_function_beats_adamic_adar": 25
+}

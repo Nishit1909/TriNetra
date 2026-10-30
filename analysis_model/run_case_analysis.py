@@ -15,7 +15,7 @@ persons: DataFrame with person_id (unique), optional department.
 edges:   DataFrame with person_a, person_b, relationship_type, is_inferred (bool), weight (float),
          optional factors (dict or JSON string) and evidence_refs (list or ';'-separated string).
 mode:    "observed_only" drops every inferred edge; "observed_plus_inferred" keeps them.
-weights: the parsed weights JSON (see weights/v1.json); its "version" is echoed back.
+weights: the parsed weights JSON (see weights/v1_1.json); its "version" is echoed back.
 
 "ok" with empty predicted_links means "no findings". A failed stage is reported as failed with its error
 and never as an empty success. Pure function: no database, no network, deterministic for a given seed.
@@ -261,27 +261,57 @@ def _link_prediction(G: nx.Graph, s: pd.DataFrame, mode: str, w: dict) -> pd.Dat
     k = lp.get("max_per_method", 50)
     comm_types = {t.upper() for t in w.get("communication_types", [])}
     rows = []
-    # method 1: inferred tie with no recorded communication between the pair (the "meet but never communicate" lead)
-    if mode == "observed_plus_inferred" and len(s):
+    # method 1: a NON-communication tie (inferred co-location, or observed meetings/friendship/...) between a pair with
+    # no recorded communication. Benchmark A (Noordin): direct-tie strength recovers hidden communication at
+    # ~11x random AP, far above shared-contact scores (~4.5x). In observed_only mode inferred ties are absent.
+    if len(s):
         communicated = {(r.a, r.b) for r in s.itertuples() if not r.is_inferred and r.type.upper() in comm_types and r.strength > 0}
-        inf = s[s.is_inferred & (s.strength > 0)]
-        inf = inf[[(a, b) not in communicated for a, b in zip(inf.a, inf.b)]]
-        agg = inf.groupby(["a", "b"]).agg(score=("strength", "sum"), breakdown=("breakdown", lambda x: {k_: v for d in x for k_, v in d.items()}),
-                                          refs=("refs", lambda x: sorted({r for l in x for r in l}))).reset_index()
-        agg = agg.sort_values(["score", "a", "b"], ascending=[False, True, True]).head(k)
-        for r in agg.itertuples(index=False):
-            rows.append((r.a, r.b, "inferred_without_recorded_communication", round(float(r.score), 6), r.breakdown, r.refs))
-    # method 2: Adamic-Adar on the case graph for pairs with no edge at all (shared contacts; weaker signal on Noordin)
+        ties = s[(~s.type.str.upper().isin(comm_types)) & (s.strength > 0)]
+        ties = ties[[(a, b) not in communicated for a, b in zip(ties.a, ties.b)]]
+        if len(ties):
+            agg = ties.groupby(["a", "b"]).agg(
+                score=("strength", "sum"),
+                breakdown=("breakdown", lambda x: {k_: v for d in x for k_, v in d.items()}),
+                refs=("refs", lambda x: sorted({r for l in x for r in l})),
+                inferred=("is_inferred", "max")).reset_index()
+            agg = agg.sort_values(["score", "a", "b"], ascending=[False, True, True]).head(k)
+            for r in agg.itertuples(index=False):
+                bd = dict(r.breakdown)
+                bd["basis"] = "inferred" if r.inferred else "observed"
+                rows.append((r.a, r.b, "tie_without_recorded_communication", round(float(r.score), 6), bd, r.refs))
+    # method 2: network proximity for pairs with no edge at all = personalised PageRank (random walk with restart,
+    # alpha 0.85, symmetrised, unweighted transitions as benchmarked). Benchmark B (8 time-sliced covert networks,
+    # predict next-period links): beats Adamic-Adar in 24/36 evaluations, 95% CI of the gain excludes zero;
+    # benchmark C (17 networks, edge hiding): tied with Adamic-Adar.
     if G.number_of_edges():
+        nodes = sorted(G)
+        n = len(nodes)
+        if n <= lp.get("ppr_max_nodes", 3000):
+            A = nx.to_numpy_array(G, nodelist=nodes, weight=None)
+            deg = A.sum(1)
+            P = np.divide(A, deg[:, None], out=np.zeros_like(A), where=deg[:, None] > 0)
+            M = 0.15 * np.linalg.inv(np.eye(n) - 0.85 * P.T)
+            S = M + M.T
+            method = "network_proximity_ppr"
+        else:  # very large case: fall back to Adamic-Adar (tied on edge hiding) to avoid an n^3 inversion
+            S, method = None, "network_proximity_adamic_adar"
+        idx = {v: i for i, v in enumerate(nodes)}
         cand = []
-        for a, b, sc in nx.adamic_adar_index(G, list(nx.non_edges(G))):   # list: a generator yields nothing in networkx 3.7
-            if sc > lp.get("adamic_adar_min_score", 0.0):
-                cand.append((*_pair(a, b), sc))
+        if S is not None:
+            for a, b in nx.non_edges(G):
+                sc = S[idx[a], idx[b]]
+                if sc > 0:
+                    cand.append((*_pair(a, b), float(sc)))
+        else:
+            for a, b, sc in nx.adamic_adar_index(G, list(nx.non_edges(G))):   # list: a generator yields nothing in networkx 3.7
+                if sc > 0:
+                    cand.append((*_pair(a, b), float(sc)))
         cand.sort(key=lambda t: (-t[2], t[0], t[1]))
         for a, b, sc in cand[:k]:
             shared = sorted(nx.common_neighbors(G, a, b))
-            rows.append((a, b, "adamic_adar_shared_contacts", round(float(sc), 6),
-                         {"shared contacts": len(shared), "examples": shared[:5]}, []))
+            rows.append((a, b, method, float(sc),   # unrounded: rounding creates artificial ties
+                         {"shared contacts": len(shared), "examples": shared[:5],
+                          "network proximity": round(sc, 6)}, []))
     return pd.DataFrame(rows, columns=LINK_COLUMNS)
 
 

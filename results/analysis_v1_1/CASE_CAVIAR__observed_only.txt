@@ -61,9 +61,9 @@ Top 8 by betweenness
 
 Communities: {'C00': 20, 'C01': 13, 'C03': 8, 'C02': 8, 'C04': 6, 'C05': 5, 'C06': 2}
 
-adamic_adar_shared_contacts: 50 suggestions; top 5
-  Caviar subject X31 - Caviar subject X41  score=1.563  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X12', 'CV_X13']}  refs=0
-  Caviar subject X101 - Caviar subject X59  score=1.532  {'shared contacts': 2, 'examples': ['CV_X102', 'CV_X79']}  refs=0
-  Caviar subject X1 - Caviar subject X13  score=1.529  {'shared contacts': 3, 'examples': ['CV_X12', 'CV_X31', 'CV_X41']}  refs=0
-  Caviar subject X3 - Caviar subject X6  score=1.480  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X85', 'CV_X88']}  refs=0
-  Caviar subject X3 - Caviar subject X76  score=1.480  {'shared contacts': 3, 'examples': ['CV_X1', 'CV_X85', 'CV_X88']}  refs=0
+network_proximity_ppr: 50 suggestions; top 5
+  Caviar subject X14 - Caviar subject X24  score=0.189  {'shared contacts': 1, 'examples': ['CV_X58'], 'network proximity': 0.188875}  refs=0
+  Caviar subject X101 - Caviar subject X59  score=0.180  {'shared contacts': 2, 'examples': ['CV_X102', 'CV_X79'], 'network proximity': 0.180374}  refs=0
+  Caviar subject X46 - Caviar subject X82  score=0.178  {'shared contacts': 1, 'examples': ['CV_X96'], 'network proximity': 0.178228}  refs=0
+  Caviar subject X1 - Caviar subject X86  score=0.171  {'shared contacts': 1, 'examples': ['CV_X83'], 'network proximity': 0.170801}  refs=0
+  Caviar subject X1 - Caviar subject X7  score=0.155  {'shared contacts': 1, 'examples': ['CV_X89'], 'network proximity': 0.155277}  refs=0
