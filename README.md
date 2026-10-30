@@ -94,9 +94,9 @@ Open **http://127.0.0.1:5173**. The dev server proxies `/api` and `/health` to t
 
 | Role | Email | Password | Can |
 |---|---|---|---|
-| Admin | `demo.admin@sih26189.demo` | `Admin@Trace2026` | Everything, plus the Admin Portal |
-| Investigator | `demo.investigator1@sih26189.demo` | `Investigator@2026` | Run analysis, review leads, upload cases (GAStech, Noordin) |
-| Viewer | `demo.viewer@sih26189.demo` | `Viewer@Trace2026` | Read-only (GAStech, Caviar) |
+| Admin | `demo.admin@trinetra.demo` | `Admin@Trace2026` | Everything, plus the Admin Portal |
+| Investigator | `demo.investigator1@trinetra.demo` | `Investigator@2026` | Run analysis, review leads, upload cases (GAStech, Noordin) |
+| Viewer | `demo.viewer@trinetra.demo` | `Viewer@Trace2026` | Read-only (GAStech, Caviar) |
 
 Also seeded: `demo.investigator2@…` / `Arjun@Trace2026`, and `demo.coi@…` / `Kanon@Trace2026` (Kanon Herrero shares a name with a GAStech employee, to demonstrate the conflict-of-interest check).
 

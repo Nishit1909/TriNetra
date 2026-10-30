@@ -80,7 +80,7 @@ def test_access_log_alerts_and_summary(client):
     assert ("view_person", True, "CASE_VAST_GASTECH") in actions
     assert ("view_case", False, "CASE_NOORDIN") in actions or any(not r["allowed"] and r["case_id"] == "CASE_NOORDIN" for r in log["items"])
     row = next(r for r in log["items"] if r["action"] == "view_person")
-    assert row["person_id"] == "P0001" and row["user_label"] == "demo.viewer@sih26189.demo" and row["role"] == "viewer"
+    assert row["person_id"] == "P0001" and row["user_label"] == "demo.viewer@trinetra.demo" and row["role"] == "viewer"
 
     alerts = client.get("/api/admin/alerts", headers=as_(ADMIN)).json()["items"]
     denied = [a for a in alerts if a["rule"] == "denied_access" and a["case_id"] == "CASE_NOORDIN"]
@@ -92,10 +92,10 @@ def test_access_log_alerts_and_summary(client):
                 if a["rule"] == "denied_access" and a["case_id"] == "CASE_NOORDIN"]) == 1
 
     r = client.post(f"/api/admin/alerts/{denied[0]['alert_id']}/review", json={"status": "acknowledged", "note": "checked"}, headers=as_(ADMIN))
-    assert r.json()["status"] == "acknowledged" and r.json()["reviewed_by"] == "demo.admin@sih26189.demo"
+    assert r.json()["status"] == "acknowledged" and r.json()["reviewed_by"] == "demo.admin@trinetra.demo"
 
     summary = client.get("/api/admin/access-summary", headers=as_(ADMIN)).json()
-    viewer = next(u for u in summary["users"] if u["user_label"] == "demo.viewer@sih26189.demo")
+    viewer = next(u for u in summary["users"] if u["user_label"] == "demo.viewer@trinetra.demo")
     assert viewer["denied"] >= 1 and viewer["persons_viewed"] >= 1
 
     with db() as conn:   # access log is append-only
@@ -117,7 +117,7 @@ def test_conflict_of_interest_and_bulk_viewing(client, monkeypatch):
         client.get(f"/api/cases/CASE_VAST_GASTECH/persons/{pid}", headers=as_(INV1))
     allalerts = client.get("/api/admin/alerts", headers=as_(ADMIN)).json()["items"]
     bulk = [a for a in allalerts if a["rule"] == "bulk_viewing"]
-    assert bulk and bulk[0]["user_label"] == "demo.investigator1@sih26189.demo"
+    assert bulk and bulk[0]["user_label"] == "demo.investigator1@trinetra.demo"
 
 
 def test_after_hours_rule(client):

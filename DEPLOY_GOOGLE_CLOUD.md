@@ -105,7 +105,7 @@ Run the same command again. Env vars and secrets are kept, so `gcloud run deploy
 ## Part D: Check that it works
 
 1. Open `<Service URL>/health/database`. Both databases should show `ok`. "degraded" means Neo4j is paused, and the app still works.
-2. Open `<Service URL>` and sign in with `demo.admin@sih26189.demo`.
+2. Open `<Service URL>` and sign in with `demo.admin@trinetra.demo`.
 3. Go through every screen: Overview, Network Graph (3D/2D/List, blinking), Leads, Compare, Upload (`samples/upload/monsoon_ledger_case.zip`), and Admin (alerts, access log, sessions).
 4. Sign in as the viewer in another browser or an incognito window. The admin should see a "signed in" alert.
 5. Logs: `gcloud run services logs read trinetra --region asia-southeast1 --limit 100`, or in the Console under *Cloud Run → trinetra → Logs*.

@@ -17,12 +17,12 @@ import psycopg
 
 USERS = [
     # user_id, email, display_name, role, badge
-    ("00000000-0000-4000-a000-000000000001", "demo.admin@sih26189.demo", "Demo Admin (Cyber Cell)", "admin", "DEMO-ADM-01"),
-    ("00000000-0000-4000-a000-000000000002", "demo.investigator1@sih26189.demo", "Demo Insp. Kavya Rao", "investigator", "DEMO-INV-01"),
-    ("00000000-0000-4000-a000-000000000003", "demo.investigator2@sih26189.demo", "Demo SI Arjun Mehta", "investigator", "DEMO-INV-02"),
-    ("00000000-0000-4000-a000-000000000004", "demo.viewer@sih26189.demo", "Demo Analyst Neha Iyer", "viewer", "DEMO-VW-01"),
+    ("00000000-0000-4000-a000-000000000001", "demo.admin@trinetra.demo", "Demo Admin (Cyber Cell)", "admin", "DEMO-ADM-01"),
+    ("00000000-0000-4000-a000-000000000002", "demo.investigator1@trinetra.demo", "Demo Insp. Kavya Rao", "investigator", "DEMO-INV-01"),
+    ("00000000-0000-4000-a000-000000000003", "demo.investigator2@trinetra.demo", "Demo SI Arjun Mehta", "investigator", "DEMO-INV-02"),
+    ("00000000-0000-4000-a000-000000000004", "demo.viewer@trinetra.demo", "Demo Analyst Neha Iyer", "viewer", "DEMO-VW-01"),
     # Name matches a GAStech security-department employee, to demonstrate the conflict-of-interest check.
-    ("00000000-0000-4000-a000-000000000005", "demo.coi@sih26189.demo", "Kanon Herrero", "investigator", "DEMO-COI: name matches a case subject on purpose"),
+    ("00000000-0000-4000-a000-000000000005", "demo.coi@trinetra.demo", "Kanon Herrero", "investigator", "DEMO-COI: name matches a case subject on purpose"),
 ]
 # Demo sign-in passwords (shown on the login page in demo mode; change them for any real use).
 PASSWORDS = {

@@ -184,9 +184,9 @@ Set `LOGIN_REQUIRED=true` in `backend/.env` to require a signed-in session for e
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | demo.admin@sih26189.demo | Admin@Trace2026 |
-| Investigator | demo.investigator1@sih26189.demo | Investigator@2026 |
-| Viewer | demo.viewer@sih26189.demo | Viewer@Trace2026 |
+| Admin | demo.admin@trinetra.demo | Admin@Trace2026 |
+| Investigator | demo.investigator1@trinetra.demo | Investigator@2026 |
+| Viewer | demo.viewer@trinetra.demo | Viewer@Trace2026 |
 
 (Also seeded: demo.investigator2 / Arjun@Trace2026 and demo.coi / Kanon@Trace2026 for the conflict-of-interest demo.)
 

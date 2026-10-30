@@ -3,7 +3,7 @@
 export const DEMO_USERS = [
   {
     user_id: '00000000-0000-4000-a000-000000000001',
-    email: 'demo.admin@sih26189.demo',
+    email: 'demo.admin@trinetra.demo',
     display_name: 'Demo Admin (Cyber Cell)',
     role: 'admin' as const,
     badge_number: 'DEMO-ADM-01',
@@ -13,7 +13,7 @@ export const DEMO_USERS = [
   },
   {
     user_id: '00000000-0000-4000-a000-000000000002',
-    email: 'demo.investigator1@sih26189.demo',
+    email: 'demo.investigator1@trinetra.demo',
     display_name: 'Demo Insp. Kavya Rao',
     role: 'investigator' as const,
     badge_number: 'DEMO-INV-01',
@@ -23,7 +23,7 @@ export const DEMO_USERS = [
   },
   {
     user_id: '00000000-0000-4000-a000-000000000003',
-    email: 'demo.investigator2@sih26189.demo',
+    email: 'demo.investigator2@trinetra.demo',
     display_name: 'Demo SI Arjun Mehta',
     role: 'investigator' as const,
     badge_number: 'DEMO-INV-02',
@@ -33,7 +33,7 @@ export const DEMO_USERS = [
   },
   {
     user_id: '00000000-0000-4000-a000-000000000004',
-    email: 'demo.viewer@sih26189.demo',
+    email: 'demo.viewer@trinetra.demo',
     display_name: 'Demo Analyst Neha Iyer',
     role: 'viewer' as const,
     badge_number: 'DEMO-VW-01',
@@ -43,7 +43,7 @@ export const DEMO_USERS = [
   },
   {
     user_id: '00000000-0000-4000-a000-000000000005',
-    email: 'demo.coi@sih26189.demo',
+    email: 'demo.coi@trinetra.demo',
     display_name: 'Kanon Herrero',
     role: 'investigator' as const,
     badge_number: 'DEMO-COI: name matches a case subject on purpose',

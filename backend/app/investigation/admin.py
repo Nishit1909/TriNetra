@@ -336,7 +336,7 @@ def test_smtp(p=Depends(require_admin)):
     with connect() as conn:
         smtp = audit.get_setting(conn, "smtp", audit.DEFAULT_SMTP)
     try:
-        audit.send_email(smtp, "[SIH26189] Test e-mail from the admin portal",
+        audit.send_email(smtp, "[TriNetra] Test e-mail from the admin portal",
                          f"SMTP is working. Sent by {_actor(p)} at {datetime.now(timezone.utc):%Y-%m-%d %H:%M} UTC.")
     except Exception as exc:
         return {"sent": False, "error": f"{type(exc).__name__}: {str(exc)[:300]}"}

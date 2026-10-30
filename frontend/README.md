@@ -29,7 +29,7 @@ The Vite dev server runs at `http://localhost:5173` and proxies `/api` and `/hea
 
 ## Sign-in
 
-With `LOGIN_REQUIRED=true` on the backend the app opens on a login page. Demo accounts: **Admin** demo.admin@sih26189.demo / Admin@Trace2026 · **Investigator** demo.investigator1@sih26189.demo / Investigator@2026 · **Viewer** demo.viewer@sih26189.demo / Viewer@Trace2026. Sign out from the user menu (top right).
+With `LOGIN_REQUIRED=true` on the backend the app opens on a login page. Demo accounts: **Admin** demo.admin@trinetra.demo / Admin@Trace2026 · **Investigator** demo.investigator1@trinetra.demo / Investigator@2026 · **Viewer** demo.viewer@trinetra.demo / Viewer@Trace2026. Sign out from the user menu (top right).
 
 ## Demo Role Switcher (`X-Demo-User`, only when login is off)
 Use the top-right user menu to switch between the 5 seeded demo accounts:

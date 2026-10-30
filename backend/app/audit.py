@@ -140,7 +140,7 @@ def _email_alert(alert_id):
                     f"Rule: {alert['rule']}\nDetails: {json_safe(alert['detail'])}\n\n"
                     "Review it in the admin portal. Alerts are flags for review, not findings about a person.")
             try:
-                send_email(smtp, f"[SIH26189] {alert['severity'].upper()} alert: {alert['title']}", body)
+                send_email(smtp, f"[TriNetra] {alert['severity'].upper()} alert: {alert['title']}", body)
                 status, error = "sent", None
             except Exception as exc:
                 status, error = "failed", f"{type(exc).__name__}: {str(exc)[:200]}"

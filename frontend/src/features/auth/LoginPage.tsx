@@ -4,9 +4,9 @@ import { api, ApiError } from '../../api/client';
 
 /** Demo accounts seeded by db/seed_demo_security.py. Shown only so judges and teammates can sign in quickly. */
 const DEMO_ACCOUNTS = [
-  { role: 'Admin', email: 'demo.admin@sih26189.demo', password: 'Admin@Trace2026', note: 'All cases, admin portal, alerts, access log', tone: 'crimson' },
-  { role: 'Investigator', email: 'demo.investigator1@sih26189.demo', password: 'Investigator@2026', note: 'Runs analysis, reviews leads, uploads cases', tone: 'cyan' },
-  { role: 'Viewer', email: 'demo.viewer@sih26189.demo', password: 'Viewer@Trace2026', note: 'Read-only on assigned cases', tone: 'slate' },
+  { role: 'Admin', email: 'demo.admin@trinetra.demo', password: 'Admin@Trace2026', note: 'All cases, admin portal, alerts, access log', tone: 'crimson' },
+  { role: 'Investigator', email: 'demo.investigator1@trinetra.demo', password: 'Investigator@2026', note: 'Runs analysis, reviews leads, uploads cases', tone: 'cyan' },
+  { role: 'Viewer', email: 'demo.viewer@trinetra.demo', password: 'Viewer@Trace2026', note: 'Read-only on assigned cases', tone: 'slate' },
 ] as const;
 
 const toneClass = {

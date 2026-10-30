@@ -9,9 +9,9 @@ from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.skipif(not os.getenv("INV_TEST_DSN"), reason="needs disposable INV_TEST_DSN")
 
-ADMIN = ("demo.admin@sih26189.demo", "Admin@Trace2026")
-INVESTIGATOR = ("demo.investigator1@sih26189.demo", "Investigator@2026")
-VIEWER = ("demo.viewer@sih26189.demo", "Viewer@Trace2026")
+ADMIN = ("demo.admin@trinetra.demo", "Admin@Trace2026")
+INVESTIGATOR = ("demo.investigator1@trinetra.demo", "Investigator@2026")
+VIEWER = ("demo.viewer@trinetra.demo", "Viewer@Trace2026")
 CSRF = {"X-TRACE-CSRF": "1"}
 
 

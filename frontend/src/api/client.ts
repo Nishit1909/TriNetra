@@ -1,5 +1,5 @@
 /**
- * Typed client for the SIH26189 backend.
+ * Typed client for the TriNetra backend.
  *
  * Every value shown in the UI comes from the backend. There is no offline or
  * fallback data: if the backend is unreachable the call fails and the screen

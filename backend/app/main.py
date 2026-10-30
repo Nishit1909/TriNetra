@@ -26,7 +26,7 @@ async def lifespan(app):
     close_driver()
 
 
-app = FastAPI(title='SIH26189 Investigation API', version='2.0.0', lifespan=lifespan,
+app = FastAPI(title='TriNetra Investigation API', version='2.0.0', lifespan=lifespan,
     description='Case-scoped source evidence and versioned analysis. Scores are investigative leads, not criminality probabilities.')
 app.add_middleware(CORSMiddleware,
     allow_origins=[origin.strip().rstrip('/') for origin in settings.cors_origins.split(',') if origin.strip()],
