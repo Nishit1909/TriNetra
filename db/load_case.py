@@ -2,7 +2,7 @@
 
 Usage:
   python db/load_case.py --dsn postgresql://... --case-dir <extracted GASTECH case> \
-      --derived-dir derived --caviar-dir cases/caviar [--migrate] [--replace]
+      --derived-dir derived --caviar-dir cases/caviar --noordin-dir cases/noordin [--migrate] [--replace]
 
 --migrate  runs db/migrations/001_case_scoped_schema.sql first (fresh database only)
 --replace  deletes an existing case (all its rows, via ON DELETE CASCADE) before loading it
@@ -23,6 +23,7 @@ import psycopg
 
 GASTECH = "CASE_VAST_GASTECH"
 CAVIAR = "CASE_CAVIAR"
+NOORDIN = "CASE_NOORDIN"
 BROADCAST_RECIPIENTS = 10
 HERE = Path(__file__).resolve().parent
 
@@ -194,12 +195,35 @@ def load_caviar(cur, caviar: Path) -> dict:
     }
 
 
+def load_noordin(cur, noordin: Path) -> dict:
+    """Separate benchmark case. Every layer is an observed relationship type; COMMUNICATIONS is the
+    benchmark label layer and is marked as such in source_note."""
+    cur.execute("""INSERT INTO inv.cases (case_id, name, description, source, is_synthetic, role)
+                   VALUES (%s, %s, %s, %s, FALSE, 'benchmark')""",
+                (NOORDIN, "Noordin Top network (Indonesia)",
+                 "Coded multi-layer ties among 79 people; link-recovery benchmark only",
+                 "Roberts & Everton (2011) via networkdata::covert_34"))
+    p = pd.read_csv(noordin / "persons.csv", dtype=str)
+    r = pd.read_csv(noordin / "relationships.csv", dtype=str)
+    return {
+        "persons": copy_df(cur, "persons", pd.DataFrame({
+            "case_id": NOORDIN, "person_id": p.person_id, "display_name": p.display_name, "department": None,
+            "job_title": None, "source_entity_id": p.source_vertex_index, "identity_basis": "coded_report_subject"})),
+        "relationships": copy_df(cur, "relationships", pd.DataFrame({
+            "case_id": NOORDIN, "person_a": r.person_a, "person_b": r.person_b,
+            "relationship_type": r.layer.str.upper(), "weight": 1.0, "evidence_count": 1,
+            "source_table": "cases/noordin/relationships.csv",
+            "source_note": np.where(r.is_label_layer.str.lower() == "true", "benchmark label layer", "feature layer")})),
+    }
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dsn", required=True)
     ap.add_argument("--case-dir", type=Path)
     ap.add_argument("--derived-dir", type=Path)
     ap.add_argument("--caviar-dir", type=Path)
+    ap.add_argument("--noordin-dir", type=Path)
     ap.add_argument("--migrate", action="store_true")
     ap.add_argument("--replace", action="store_true")
     a = ap.parse_args(argv)
@@ -217,6 +241,10 @@ def main(argv=None) -> int:
                     if a.replace:
                         cur.execute("DELETE FROM inv.cases WHERE case_id = %s", (CAVIAR,))
                     report[CAVIAR] = load_caviar(cur, a.caviar_dir)
+                if a.noordin_dir:
+                    if a.replace:
+                        cur.execute("DELETE FROM inv.cases WHERE case_id = %s", (NOORDIN,))
+                    report[NOORDIN] = load_noordin(cur, a.noordin_dir)
     print(json.dumps(report, indent=1))
     return 0
 

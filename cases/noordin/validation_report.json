@@ -1,0 +1,86 @@
+{
+ "layers": {
+  "business&finance": {
+   "nodes": 79,
+   "edges_raw": 15,
+   "undirected_pairs": 15,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "classmates": {
+   "nodes": 79,
+   "edges_raw": 175,
+   "undirected_pairs": 175,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "communications": {
+   "nodes": 79,
+   "edges_raw": 200,
+   "undirected_pairs": 200,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "friendship": {
+   "nodes": 79,
+   "edges_raw": 91,
+   "undirected_pairs": 91,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "kinship": {
+   "nodes": 79,
+   "edges_raw": 16,
+   "undirected_pairs": 16,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "logistics": {
+   "nodes": 79,
+   "edges_raw": 29,
+   "undirected_pairs": 29,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "meetings": {
+   "nodes": 79,
+   "edges_raw": 63,
+   "undirected_pairs": 63,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "operations": {
+   "nodes": 79,
+   "edges_raw": 267,
+   "undirected_pairs": 267,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "soulmates": {
+   "nodes": 79,
+   "edges_raw": 11,
+   "undirected_pairs": 11,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  },
+  "trainingevents": {
+   "nodes": 79,
+   "edges_raw": 147,
+   "undirected_pairs": 147,
+   "self_loops_removed": 0,
+   "duplicate_rows_collapsed": 0
+  }
+ },
+ "issues": [],
+ "case_id": "CASE_NOORDIN",
+ "source_file": "covert_34.rda",
+ "source_sha256": "2b28737e5d0088bfe28478b0aed574682fc75b6a4d0c3c2f90a06367a3cda19f",
+ "persons": 79,
+ "duplicate_display_names": 0,
+ "missing_display_names": 0,
+ "persons_with_no_tie_in_any_layer": 1,
+ "persons_with_no_communication_tie": 5,
+ "relationship_rows": 1014,
+ "all_pairs": 3081,
+ "missing_values_note": "The source has no missing-value marker: an absent tie means 'not recorded in the coded sources', not a confirmed non-relationship."
+}

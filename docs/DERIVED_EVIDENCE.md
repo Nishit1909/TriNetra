@@ -44,7 +44,7 @@ python scripts/caviar_check.py cases/caviar
 
 One vehicle schedule is shifted by each of 1–13 days. Distinct overlap days are counted separately for each shift direction and then averaged. The old code counted distinct days after combining directions and divided again, understating the baseline.
 
-After that correction and exclusion of ambiguous gaps, current lead levels are 10 medium, 41 weak multi-day, 127 single-day weak and 383 not-a-lead. None is strong. Twenty-five pairs have repeated private-context overlaps with no counted direct email. These are vehicle-based screening outputs, not evidence of an undisclosed personal relationship.
+After that correction and exclusion of ambiguous gaps, current lead levels are 10 medium, 41 weak multi-day, 127 single-day weak and 383 not-a-lead. None is strong. Twenty-five pairs have repeated private-context overlaps with no counted direct email. Exact rule: `meets_privately_never_emails_directly = (private_days >= 2) AND (direct_email_events == 0)`, where `private_days` counts distinct days with a home-visit, third-party-home or low-traffic-place overlap, and a direct email is a resolved recipient event whose header has fewer than 10 recipients. This flag is separate from `lead_level`: the 51 multi-day leads (10 medium + 41 weak) include pairs that do email each other; the 25 are the subset with no direct email. These are vehicle-based screening outputs, not evidence of an undisclosed personal relationship.
 
 The minimum smoothed chance value is 1/14, approximately 0.071. The short observation period, circular shifts, inferred stops and manually chosen rules limit its interpretation. Do not market this as a validated p-value or criminal-risk estimate.
 

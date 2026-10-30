@@ -7,7 +7,7 @@ A new Postgres schema `inv` that holds every case separately. It does **not** to
 ```bash
 unzip datasets/GASTECH_MC1_MC2_VALIDATED_CASE.zip -d /tmp/case
 python db/load_case.py --dsn "$DATABASE_URL" --case-dir /tmp/case \
-    --derived-dir derived --caviar-dir cases/caviar --migrate     # first time (creates schema inv)
+    --derived-dir derived --caviar-dir cases/caviar --noordin-dir cases/noordin --migrate     # first time (creates schema inv)
 python db/load_case.py ... --replace                              # reload a case (deletes only that case's rows)
 ```
 
@@ -35,6 +35,7 @@ Use a disposable or test database first. Loading takes about 20 s (685k GPS rows
 |---|---|
 | CASE_VAST_GASTECH | 54 persons, 40 vehicles, 35 assignments, 33,708 locations, 685,169 GPS events, 8,097 email events, 111 quarantined endpoints, 1,490 purchases, 1,392 loyalty events, 884 documents, 1,262 email pairs, 3,068 stops (incl. 93 uncertain gaps), 73 places, 13,357 co-location events, 561 inferred pair relationships, 55 loyalty links, 3,002 mentions |
 | CASE_CAVIAR | 62 persons, 88 intercept relationships |
+| CASE_NOORDIN (benchmark) | 79 persons, 1,014 layer relationships (COMMUNICATIONS marked as the benchmark label layer) |
 
 ## Still to do in the backend (not in this change)
 - Point queries at `inv.*` and filter every query and endpoint by `case_id`.
