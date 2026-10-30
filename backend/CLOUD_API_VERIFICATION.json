@@ -1,0 +1,91 @@
+{
+  "verified_at": "2026-10-30T12:56:09.685688+00:00",
+  "frontend_modified": false,
+  "cases": {
+    "CASE_VAST_GASTECH": {
+      "persons": 54,
+      "runs": [
+        {
+          "mode": "observed_only",
+          "run_id": "416bb776-3e9e-4237-af0f-6d388db56256",
+          "status": "completed",
+          "predictions": 50,
+          "graph_source": "neo4j",
+          "shown_nodes": 25,
+          "shown_edges": 75
+        },
+        {
+          "mode": "observed_plus_inferred",
+          "run_id": "2d2f9a61-4fd6-4533-bd99-4bd9defe0472",
+          "status": "completed",
+          "predictions": 100,
+          "graph_source": "neo4j_reconciled",
+          "shown_nodes": 25,
+          "shown_edges": 75
+        }
+      ]
+    },
+    "CASE_CAVIAR": {
+      "persons": 62,
+      "runs": [
+        {
+          "mode": "observed_only",
+          "run_id": "74bee4d9-06f9-4d94-92ad-0cb637330cfa",
+          "status": "completed",
+          "predictions": 50,
+          "graph_source": "neo4j",
+          "shown_nodes": 25,
+          "shown_edges": 55
+        },
+        {
+          "mode": "observed_plus_inferred",
+          "run_id": "64d8b2df-0ef4-448a-9d68-00ac448e3fa6",
+          "status": "completed",
+          "predictions": 50,
+          "graph_source": "neo4j",
+          "shown_nodes": 25,
+          "shown_edges": 55
+        }
+      ]
+    },
+    "CASE_NOORDIN": {
+      "persons": 79,
+      "runs": [
+        {
+          "mode": "observed_only",
+          "run_id": "45afc793-b53c-40ff-b7ae-389b7d8ec198",
+          "status": "completed",
+          "predictions": 100,
+          "graph_source": "neo4j",
+          "shown_nodes": 25,
+          "shown_edges": 75
+        },
+        {
+          "mode": "observed_plus_inferred",
+          "run_id": "1d4e0bd8-f939-45d3-9821-8cbb4706341f",
+          "status": "completed",
+          "predictions": 100,
+          "graph_source": "neo4j",
+          "shown_nodes": 25,
+          "shown_edges": 75
+        }
+      ]
+    }
+  },
+  "checks": [
+    "GAStech pair evidence includes inferred factors and source co-location/stops",
+    "cross-case saved run rejected",
+    "unknown case rejected",
+    "legacy global analytics unmounted",
+    "authentication rejects missing token"
+  ],
+  "health": {
+    "status": "ok",
+    "databases": {
+      "postgresql": "ok",
+      "neo4j": "ok"
+    }
+  },
+  "jwt_valid_session_tested": false,
+  "deployment_status": "Local API verified against cloud databases; not deployed"
+}

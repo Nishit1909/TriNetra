@@ -1,0 +1,39 @@
+{
+  "verified_at": "2026-10-30T11:58:25.412455+00:00",
+  "postgres": {
+    "CASE_VAST_GASTECH": {
+      "persons": 54,
+      "relationships": 1262,
+      "inferred_relationships": 561,
+      "communication_events": 8097,
+      "location_events": 685169
+    },
+    "CASE_CAVIAR": {
+      "persons": 62,
+      "relationships": 88
+    },
+    "CASE_NOORDIN": {
+      "persons": 79,
+      "relationships": 1014
+    }
+  },
+  "neo4j": {
+    "CASE_VAST_GASTECH": {
+      "persons": 54,
+      "edges": 1304,
+      "snapshot_id": "75c3512f-c74b-4f11-83df-89ffaf30a364"
+    },
+    "CASE_CAVIAR": {
+      "persons": 62,
+      "edges": 88,
+      "snapshot_id": "071799e7-a24e-4caf-972f-45779f2cdef5"
+    },
+    "CASE_NOORDIN": {
+      "persons": 79,
+      "edges": 1014,
+      "snapshot_id": "316e8d6b-0d05-4827-9dc0-8bfaca76c002"
+    }
+  },
+  "backend_integration_complete": false,
+  "unattributed_vehicle_gps_preserved": true
+}

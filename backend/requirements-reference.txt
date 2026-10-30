@@ -1,0 +1,7 @@
+# Only for offline benchmarks and retained legacy-module tests, not the live API.
+-r requirements.txt
+scikit-learn
+xgboost
+rapidfuzz
+joblib
+python-multipart
