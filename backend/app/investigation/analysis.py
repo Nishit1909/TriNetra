@@ -256,6 +256,13 @@ def compare_runs(case_id: str, run_a: UUID, run_b: UUID, top: int = Query(10, ge
         "links_only_in_b": link_view(set(l["b"]) - set(l["a"]), l["b"])[:top * 5],
         "links_only_in_a": link_view(set(l["a"]) - set(l["b"]), l["a"])[:top * 5],
         "links_in_both": len(set(l["a"]) & set(l["b"])),
+        "predicted_in_a": len(l["a"]), "predicted_in_b": len(l["b"]),
+        # Even when nobody changes rank, influence scores move: show the largest PageRank changes.
+        "score_changes": sorted(({"person_id": p, "display_name": names.get(p),
+                                  "pagerank_a": round(float(m["a"][p]["pagerank"] or 0), 4),
+                                  "pagerank_b": round(float(m["b"][p]["pagerank"] or 0), 4),
+                                  "change": round(float(m["b"][p]["pagerank"] or 0) - float(m["a"][p]["pagerank"] or 0), 4)}
+                                 for p in set(m["a"]) & set(m["b"])), key=lambda r: (-abs(r["change"]), r["person_id"]))[:5],
         "note": "Community labels are recomputed per run, so a label change alone may not mean a real regrouping.",
     })
 

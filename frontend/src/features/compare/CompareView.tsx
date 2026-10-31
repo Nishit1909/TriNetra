@@ -107,15 +107,15 @@ export const CompareView: React.FC<CompareViewProps> = ({ caseId, onSelectPerson
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <GlassStat
-              label="New Links Added in Run B"
+              label="New Suggested Links in Run B"
               value={comparison.links_only_in_b.length}
-              sub={`Mode: ${comparison.run_b.mode}`}
+              sub={`${comparison.links_only_in_b.length} new + ${comparison.links_in_both} retained = ${comparison.predicted_in_b ?? '—'} suggestions in Run B`}
               accent="violet"
             />
             <GlassStat
-              label="Links Retained in Both"
+              label="Suggestions in Both Runs"
               value={comparison.links_in_both}
-              sub="Consistent across modes"
+              sub="Same pair and method in A and B"
               accent="cyan"
             />
             <GlassStat
@@ -140,9 +140,23 @@ export const CompareView: React.FC<CompareViewProps> = ({ caseId, onSelectPerson
                 Biggest Influence (PageRank) Rank Shifts
               </h2>
               {comparison.biggest_rank_changes.length === 0 ? (
-                <p className="text-xs text-slate-400">
-                  No influence-rank changes between these two runs: the added links did not change anyone's PageRank position.
-                </p>
+                <div className="space-y-2">
+                  <p className="text-xs text-slate-400">
+                    No influence-rank changes: the added links did not change anyone's rank order. Largest influence-score changes:
+                  </p>
+                  {(comparison.score_changes || []).map((sc) => (
+                    <div key={sc.person_id} onClick={() => onSelectPerson(sc.person_id)}
+                      className="p-2.5 rounded-[12px] bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] flex items-center justify-between text-xs cursor-pointer">
+                      <span className="text-white font-medium">{sc.display_name || sc.person_id}</span>
+                      <span className="font-mono text-slate-400">
+                        {sc.pagerank_a.toFixed(4)} → <strong className="text-white">{sc.pagerank_b.toFixed(4)}</strong>{' '}
+                        <span className={sc.change >= 0 ? 'text-emerald-300' : 'text-rose-300'}>
+                          ({sc.change >= 0 ? '+' : ''}{sc.change.toFixed(4)})
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
               ) : (
                 <div className="space-y-2">
                   {comparison.biggest_rank_changes.map((m) => {

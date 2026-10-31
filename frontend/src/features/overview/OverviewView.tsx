@@ -235,19 +235,21 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <AnimatedStatCard
           label="Observed Ties"
           target={summary.counts.relationships}
+          sub="one per pair and type: recorded ties, calls, money"
           icon={<Share2 className="w-4 h-4" />}
           accentClass="text-[#34d399]"
         />
         <AnimatedStatCard
           label="Inferred Ties"
           target={summary.counts.inferred_relationships}
-          sub="from location evidence"
+          sub="pairs linked by repeated private meetings"
           icon={<Car className="w-4 h-4" />}
           accentClass="text-[#a78bfa]"
         />
         <AnimatedStatCard
           label="Co-locations"
           target={summary.counts.colocation_events}
+          sub="individual meetings: same place, same time"
           icon={<Car className="w-4 h-4" />}
           accentClass="text-[#a78bfa]"
         />

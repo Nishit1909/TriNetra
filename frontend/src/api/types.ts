@@ -291,6 +291,9 @@ export interface CompareRunsResponse {
     score: number;
   }[];
   links_in_both: number;
+  predicted_in_a?: number;
+  predicted_in_b?: number;
+  score_changes?: { person_id: string; display_name: string | null; pagerank_a: number; pagerank_b: number; change: number }[];
   note: string;
 }
 
