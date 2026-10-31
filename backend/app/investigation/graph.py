@@ -90,12 +90,14 @@ def compact_graph(nodes, edges, metrics, include, mode, limit, edge_limit, focus
     # Strengths of different kinds aren't on one scale (prediction scores are rankings within a method),
     # so inferred and predicted edges get reserved shares of edge_limit instead of competing with
     # observed strength. Unused share flows back to the others.
+    # In a focused view the focused person's own links come first, so the budget never hides them.
+    own = (lambda e: 0 if focus in (e["source"], e["target"]) else 1) if focus is not None else (lambda e: 0)
     tie = lambda edge:(edge["source"],edge["target"],edge["kind"],edge["type"],edge["id"])
     groups = {
-        "observed": sorted((e for e in visible if e["kind"] == "observed"),key=lambda e:(-float(e["weight"]),*tie(e))),
-        "inferred": sorted((e for e in visible if e["kind"] == "inferred"),key=lambda e:(-float(e["weight"]),*tie(e))),
+        "observed": sorted((e for e in visible if e["kind"] == "observed"),key=lambda e:(own(e),-float(e["weight"]),*tie(e))),
+        "inferred": sorted((e for e in visible if e["kind"] == "inferred"),key=lambda e:(own(e),-float(e["weight"]),*tie(e))),
         "predicted": sorted((e for e in visible if e["kind"] == "predicted"),
-                            key=lambda e:(METHOD_ORDER.index(e["type"]) if e["type"] in METHOD_ORDER else 99,-float(e["weight"]),*tie(e))),
+                            key=lambda e:(own(e),METHOD_ORDER.index(e["type"]) if e["type"] in METHOD_ORDER else 99,-float(e["weight"]),*tie(e))),
     }
     share = {"inferred":edge_limit//4,"predicted":edge_limit//3}
     take = {k:min(len(groups[k]),max(1,share[k]) if groups[k] else 0) for k in share}

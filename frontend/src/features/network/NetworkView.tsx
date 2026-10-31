@@ -714,7 +714,14 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
                   </GlassButton>
                 </div>
                 <div>
-                  <h3 className="text-xs font-semibold text-slate-300 mb-2">Connections in this view</h3>
+                  <h3 className="text-xs font-semibold text-slate-300 mb-1">Connections in this view</h3>
+                  <p className="text-[11px] text-slate-400 mb-2">
+                    {selectedLinks.length} link{selectedLinks.length === 1 ? '' : 's'} shown of {chosen.degree ?? '—'} connection
+                    {chosen.degree === 1 ? '' : 's'} in the case.
+                    {focus !== chosen.id && (chosen.degree ?? 0) > selectedLinks.length && (
+                      <> The view shows only the most influential people; use <strong className="text-slate-200">Focus on this neighbourhood</strong> to see them all.</>
+                    )}
+                  </p>
                   <div className="space-y-1 max-h-64 overflow-auto pr-1">
                     {selectedLinks.slice(0, 12).map((e) => (
                       <button
