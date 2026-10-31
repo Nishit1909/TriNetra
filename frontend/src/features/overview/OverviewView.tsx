@@ -241,7 +241,7 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         <AnimatedStatCard
           label="Inferred Ties"
           target={summary.counts.inferred_relationships}
-          sub="GPS co-locations"
+          sub="from location evidence"
           icon={<Car className="w-4 h-4" />}
           accentClass="text-[#a78bfa]"
         />

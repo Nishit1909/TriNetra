@@ -434,3 +434,36 @@ def prediction_reviews(case_id: str, run_id: UUID, a: str, b: str):
             WHERE r.case_id=%s AND r.analysis_run_id=%s AND r.person_a=%s AND r.person_b=%s
             ORDER BY r.reviewed_at DESC""", (case_id, run_id, a, b)).fetchall()
     return json_safe(rows)
+
+
+@router.get("/analysis/{run_id}/strongest_ties")
+def strongest_ties(case_id: str, run_id: UUID, limit: int = Query(15, ge=1, le=100)):
+    """Pairs with the strongest combined evidence in this run (calls + money + meetings + recorded ties), using the
+    model's own edge-strength rules. Complements the leads, which only cover pairs with NO recorded communication."""
+    with connect() as conn:
+        run = get_run(conn, case_id, run_id)
+        names = {r["person_id"]: r["display_name"] for r in conn.execute(
+            "SELECT person_id,display_name FROM inv.persons WHERE case_id=%s", (case_id,)).fetchall()}
+        persons_df, edges_df = load_inputs(conn, case_id, run["mode"])
+    from analysis_model.run_case_analysis import _edge_strength
+    weights = json.loads(WEIGHTS_PATH.read_bytes())
+    st = _edge_strength(persons_df, edges_df, weights, [])
+    st = st[st.strength > 0]
+    comm_types = {t.upper() for t in weights.get("communication_types", [])}
+    pairs = {}
+    for r in st.itertuples(index=False):
+        p = pairs.setdefault((r.a, r.b), {"person_a": r.a, "person_b": r.b, "strength": 0.0, "types": set(), "sources": set(),
+                                          "inferred": False})
+        p["strength"] += float(r.strength)
+        p["types"].add(r.type)
+        kind = "communication" if r.type.upper() in comm_types else ("money" if r.type.upper() == "BUSINESS&FINANCE" else
+                ("location" if r.is_inferred else "recorded tie"))
+        p["sources"].add(kind)
+        p["inferred"] = p["inferred"] or bool(r.is_inferred)
+    rows = sorted(pairs.values(), key=lambda p: (-len(p["sources"]), -p["strength"], p["person_a"], p["person_b"]))[:limit]
+    for p in rows:
+        p.update(name_a=names.get(p["person_a"]), name_b=names.get(p["person_b"]), strength=round(p["strength"], 3),
+                 types=sorted(p["types"]), sources=sorted(p["sources"]), corroboration=len(p["sources"]))
+    return json_safe({"items": rows, "run": {"analysis_run_id": run["analysis_run_id"], "mode": run["mode"]},
+                      "note": "Sorted by how many independent kinds of evidence link the pair, then by combined strength. "
+                              "Strong evidence of contact is not evidence of wrongdoing."})

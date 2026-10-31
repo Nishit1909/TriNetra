@@ -6,6 +6,7 @@ import {
   InferredRelationship,
   PersonRecord,
   PredictedLink,
+  StrongTie,
 } from '../../api/types';
 import { GlassBadge, GlassButton, GlassCard, GlassSkeleton } from '../../components/glass';
 import { methodLabel } from '../../utils/format';
@@ -26,7 +27,8 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
   onSelectPerson,
   onToast,
 }) => {
-  const [activeTab, setActiveTab] = useState<'evidence' | 'structural_pattern' | 'meetings'>('evidence');
+  const [activeTab, setActiveTab] = useState<'evidence' | 'structural_pattern' | 'meetings' | 'strongest'>('evidence');
+  const [strongTies, setStrongTies] = useState<StrongTie[]>([]);
   const [runId, setRunId] = useState<string | null>(null);
   const [predictedLinks, setPredictedLinks] = useState<PredictedLink[]>([]);
   const [scoreNote, setScoreNote] = useState<string>(
@@ -45,7 +47,7 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
     Promise.all([
       api.getPersons(caseId, { limit: 100 }),
       api.listAnalysisRuns(caseId),
-      api.getInferredLeads(caseId, 'medium,weak', 50, 0).catch(() => ({ items: [] })),
+      api.getInferredLeads(caseId, 'strong,medium,weak', 50, 0).catch(() => ({ items: [] })),
     ]).then(async ([pRes, runs, leadsRes]) => {
       const pMap = new Map<string, PersonRecord>();
       (pRes.items || []).forEach((p) => pMap.set(p.person_id, p));
@@ -63,10 +65,12 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
         setRunId(targetRun.analysis_run_id);
         const linksRes = await api.getPredictedLinks(caseId, targetRun.analysis_run_id, { limit: 100 });
         setPredictedLinks(linksRes.items || []);
+        api.getStrongestTies(caseId, targetRun.analysis_run_id).then((r) => setStrongTies(r.items || [])).catch(() => setStrongTies([]));
         if (linksRes.score_note) setScoreNote(linksRes.score_note);
       } else {
         setRunId(null);
         setPredictedLinks([]);
+        setStrongTies([]);
       }
       setLoading(false);
     }).catch((err) => {
@@ -148,6 +152,16 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
             >
               Inferred Meetings ({inferredMeetings.length})
             </button>
+            <button
+              onClick={() => setActiveTab('strongest')}
+              className={`px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition ${
+                activeTab === 'strongest'
+                  ? 'bg-amber-500/20 text-amber-200 border border-amber-400/40'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Strongest Ties ({strongTies.length})
+            </button>
           </div>
         </div>
       </GlassCard>
@@ -158,12 +172,50 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
           <GlassSkeleton className="h-24 w-full" />
           <GlassSkeleton className="h-24 w-full" />
         </div>
+      ) : activeTab === 'strongest' ? (
+        <div className="space-y-3">
+          <GlassCard className="p-3 text-xs text-slate-400">
+            Pairs linked by the most independent kinds of evidence (communication, money, location, recorded ties), then by
+            combined strength. Unlike leads, these pairs may communicate openly. Strong contact is not evidence of wrongdoing.
+          </GlassCard>
+          {strongTies.length === 0 ? (
+            <GlassCard className="p-8 text-center text-sm text-slate-400">Run analysis to see the strongest ties.</GlassCard>
+          ) : (
+            strongTies.map((t, idx) => (
+              <GlassCard key={`${t.person_a}-${t.person_b}`} className="p-4 flex flex-wrap items-center justify-between gap-3">
+                <div className="space-y-1.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-semibold bg-amber-500/20 text-amber-200 border border-amber-400/40">
+                      #{idx + 1} · {t.corroboration} evidence type{t.corroboration === 1 ? '' : 's'}
+                    </span>
+                    <span className="font-semibold text-white text-sm">
+                      {t.name_a || t.person_a} <span className="text-slate-500">↔</span> {t.name_b || t.person_b}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {t.sources.map((s) => (
+                      <GlassBadge key={s} tone={s === 'location' ? 'violet' : s === 'money' ? 'emerald' : s === 'communication' ? 'cyan' : 'slate'}>
+                        {s}
+                      </GlassBadge>
+                    ))}
+                    <span className="text-[11px] font-mono text-slate-400 self-center">
+                      strength {t.strength} · {t.types.join(', ')}
+                    </span>
+                  </div>
+                </div>
+                <GlassButton onClick={() => setSelectedPair({ a: t.person_a, b: t.person_b })}>
+                  Inspect Evidence
+                </GlassButton>
+              </GlassCard>
+            ))
+          )}
+        </div>
       ) : activeTab === 'meetings' ? (
         /* Inferred Meetings Tab */
         <div className="space-y-3">
           {inferredMeetings.length === 0 ? (
             <GlassCard className="p-8 text-center text-sm text-slate-400">
-              No GPS-inferred co-location meetings recorded for this case.
+              No inferred meetings (same place, same time) recorded for this case.
             </GlassCard>
           ) : (
             inferredMeetings.map((m, idx) => {
@@ -185,7 +237,9 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
                       </span>
                       <GlassBadge tone="violet">
                         <Car className="w-3 h-3" />
-                        Inferred — assigned driver assumed
+                        {m.person_attribution === 'uploaded_location_as_given'
+                          ? 'Inferred from uploaded locations (presence, not proof of contact)'
+                          : 'Inferred from vehicle GPS (assigned driver assumed)'}
                       </GlassBadge>
                       <span className="font-semibold text-white text-sm">
                         {nameA} <span className="text-slate-500">↔</span> {nameB}
@@ -242,7 +296,7 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
           {(activeTab === 'evidence' ? evidenceLeads : patternLeads).length === 0 ? (
             <GlassCard className="p-8 text-center text-sm text-slate-400">
               {activeTab === 'evidence' && mode === 'observed_only'
-                ? 'Switch analysis mode to "Observed + Inferred" in the top bar to include GPS co-location evidence leads.'
+                ? 'Switch analysis mode to "Observed + Inferred" in the top bar to include location-based (co-location) evidence leads.'
                 : 'No leads found in this category for the current analysis run.'}
             </GlassCard>
           ) : (
@@ -273,7 +327,11 @@ export const LeadsView: React.FC<LeadsViewProps> = ({
                         {methodLabel(lead.method)}
                       </GlassBadge>
                       {lead.factor_breakdown?.basis === 'inferred' && (
-                        <GlassBadge tone="violet">Inferred (Vehicle GPS — assigned driver assumed)</GlassBadge>
+                        <GlassBadge tone="violet">
+                          {caseId.startsWith('CASE_UPLOAD_')
+                            ? 'Inferred from uploaded locations (presence, not proof of contact)'
+                            : 'Inferred from vehicle GPS (assigned driver assumed)'}
+                        </GlassBadge>
                       )}
                       {lead.review_status === 'confirmed' && (
                         <GlassBadge tone="emerald">

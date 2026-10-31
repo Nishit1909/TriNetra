@@ -183,3 +183,22 @@ def test_upload_with_locations_shows_meetings_in_pair_evidence(client):
     body = c.get(f"/api/cases/{case_id}/relationships/P1/P4").json()
     assert body["colocation_events"]["total"] >= 2 and body["colocation_events"]["items"][0]["source"] == "location"
     assert body["transfers"]["total"] == 2 and body["uncertainty"]["person_attribution"] == "uploaded_location_as_given"
+
+
+def test_strongest_ties_export_and_lead_levels(client):
+    c, created, who, connect = client
+    r = c.post("/api/case-uploads", data={"name": "Ties " + uuid4().hex[:4]},
+               files={"persons": ("p.csv", PERSONS), "relationships": ("r.csv", RELS), "communications": ("c.csv", COMMS),
+                      "locations": ("l.csv", LOCS), "transactions": ("t.csv", TX)})
+    case_id = r.json()["case_id"]; created.append(case_id)
+    with connect() as conn:   # same lead vocabulary as GAStech, so the Leads page shows every level
+        levels = {row["lead_level"] for row in conn.execute("SELECT lead_level FROM inv.inferred_relationships WHERE case_id=%s", (case_id,))}
+    assert levels <= {"strong", "medium", "weak"}
+    run = c.post(f"/api/cases/{case_id}/analysis", json={"mode": "observed_plus_inferred"}).json()["run"]["analysis_run_id"]
+    ties = c.get(f"/api/cases/{case_id}/analysis/{run}/strongest_ties").json()["items"]
+    top = ties[0]
+    assert (top["person_a"], top["person_b"]) == ("P1", "P4") and {"location", "money"} <= set(top["sources"])
+    csv_text = c.get(f"/api/cases/{case_id}/export/links.csv").text
+    assert csv_text.splitlines()[0].startswith("layer,type_or_method,person_a")
+    assert any(l.startswith("inferred,MET_PRIVATELY,P1") for l in csv_text.splitlines())
+    assert any(l.startswith("predicted,") for l in csv_text.splitlines())

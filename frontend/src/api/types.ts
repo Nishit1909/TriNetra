@@ -496,3 +496,15 @@ export interface AdminSettingsResponse {
     notify_logins?: boolean;
   };
 }
+
+export interface StrongTie {
+  person_a: string;
+  person_b: string;
+  name_a: string | null;
+  name_b: string | null;
+  strength: number;
+  types: string[];
+  sources: string[];
+  corroboration: number;
+  inferred: boolean;
+}

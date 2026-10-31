@@ -5,6 +5,7 @@ import {
   Box,
   Crosshair,
   Download,
+  FileSpreadsheet,
   Expand,
   Focus,
   Layers3,
@@ -220,7 +221,12 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
     onOpenPairEvidence(endpoint(e.source), endpoint(e.target));
   }
 
-  function run(type: GraphCommand['type']) {
+  function run(type: GraphCommand['type'] | 'csv') {
+    if (type === 'csv') {
+      // cookie session is sent automatically; the server answers with a CSV download
+      window.open(`/api/cases/${encodeURIComponent(caseId)}/export/links.csv?mode=${mode}`, '_blank');
+      return;
+    }
     if (view === '3d') {
       setCommand((c) => ({ type, id: c.id + 1 }));
       return;
@@ -255,7 +261,16 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
           <p className="text-sm text-slate-400 mt-1">Start with a signal. Follow the relationships. Find the evidence.</p>
         </div>
         <div className="flex items-center gap-2">
-          <GlassBadge tone="slate">Source: {data?.graph_source?.replace(/_/g, ' ') || '—'}</GlassBadge>
+          <span
+            title={data?.graph_source === 'postgresql_fallback'
+              ? 'No Neo4j copy of this case (uploaded cases are read from PostgreSQL). The graph is the same canonical data.'
+              : 'Graph store used for this view'}
+          >
+            <GlassBadge tone="slate">
+              Graph store: {data?.graph_source === 'postgresql_fallback' ? 'PostgreSQL' : data?.graph_source === 'neo4j_reconciled'
+                ? 'Neo4j (checked against PostgreSQL)' : data?.graph_source === 'neo4j' ? 'Neo4j' : '—'}
+            </GlassBadge>
+          </span>
           <GlassBadge tone={mode === 'observed_only' ? 'slate' : 'violet'}>
             {mode === 'observed_only' ? 'Observed only' : 'Observed + inferred'}
           </GlassBadge>
@@ -414,6 +429,7 @@ export const NetworkView: React.FC<NetworkViewProps> = ({
                       ['out', ZoomOut, 'Zoom out'],
                       ['fit', Expand, 'Fit graph'],
                       ['export', Download, 'Export PNG'],
+                      ['csv', FileSpreadsheet, 'Export all links (CSV, with evidence IDs)'],
                     ] as const
                   ).map(([type, Icon, title]) => (
                     <button

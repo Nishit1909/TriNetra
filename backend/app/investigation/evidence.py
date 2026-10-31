@@ -205,3 +205,49 @@ def summary(case_id: str):
                           "uncertainty": {"vehicle_person_attribution": "uploaded_location_as_given" if has_uploaded_locations
                                           else ("assigned_driver_assumed" if counts["vehicles"] else "not_applicable"),
                                           "card_ownership": "unknown", "source_timezone": "unknown"}})
+
+
+@router.get("/export/links.csv")
+def export_links(case_id: str, mode: Literal["observed_only", "observed_plus_inferred"] = "observed_plus_inferred",
+                 run_id: str | None = None):
+    """Every link in the case as CSV: layer, type, endpoints, strength/score, evidence references, provenance, run id.
+    Use it to reconcile the counts shown in the graph and to audit inferred and predicted links."""
+    import csv, io
+    from fastapi.responses import Response
+    with connect() as conn:
+        require_case(case_id, conn)
+        names = {r["person_id"]: r["display_name"] for r in conn.execute(
+            "SELECT person_id,display_name FROM inv.persons WHERE case_id=%s", (case_id,)).fetchall()}
+        rows = []
+        for r in conn.execute("""SELECT person_a,person_b,relationship_type,weight,evidence_count,source_table,source_note
+                FROM inv.relationships WHERE case_id=%s ORDER BY person_a,person_b,relationship_type""", (case_id,)).fetchall():
+            rows.append(["observed", r["relationship_type"], r["person_a"], r["person_b"], r["weight"], r["evidence_count"], "",
+                         f"{r['source_table']}: {r['source_note'] or ''}".strip(": "), ""])
+        if mode == "observed_plus_inferred":
+            for r in conn.execute("""SELECT person_a,person_b,relationship_type,lead_strength,lead_level,supporting_colocation_ids,
+                    person_attribution FROM inv.inferred_relationships WHERE case_id=%s ORDER BY person_a,person_b""", (case_id,)).fetchall():
+                refs = r["supporting_colocation_ids"] or []
+                rows.append(["inferred", r["relationship_type"], r["person_a"], r["person_b"], r["lead_strength"], len(refs),
+                             " ".join(refs[:50]), f"{r['person_attribution']} ({r['lead_level']})", ""])
+        run = None
+        if run_id:
+            run = conn.execute("SELECT * FROM inv.analysis_runs WHERE case_id=%s AND analysis_run_id::text=%s", (case_id, run_id)).fetchone()
+        else:
+            run = conn.execute("""SELECT * FROM inv.analysis_runs WHERE case_id=%s AND mode=%s AND status IN ('completed','partial')
+                ORDER BY started_at DESC LIMIT 1""", (case_id, mode)).fetchone()
+        if run:
+            for r in conn.execute("""SELECT person_a,person_b,method,score,evidence_refs,
+                    row_number() OVER (PARTITION BY method ORDER BY score DESC, person_a, person_b) AS rank_in_method
+                    FROM inv.predicted_links WHERE case_id=%s AND analysis_run_id=%s ORDER BY method,rank_in_method""",
+                    (case_id, run["analysis_run_id"])).fetchall():
+                refs = r["evidence_refs"] or []
+                rows.append(["predicted", r["method"], r["person_a"], r["person_b"], r["score"], len(refs), " ".join(refs[:50]),
+                             f"rank {r['rank_in_method']} in method; weights {run['weights_version']}", str(run["analysis_run_id"])])
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["layer", "type_or_method", "person_a", "name_a", "person_b", "name_b", "strength_or_score",
+                "evidence_count", "evidence_refs", "provenance", "analysis_run_id"])
+    for layer, typ, a, b, sc, n, refs, prov, rid in rows:
+        w.writerow([layer, typ, a, names.get(a, ""), b, names.get(b, ""), sc, n, refs, prov, rid])
+    return Response(buf.getvalue(), media_type="text/csv",
+                    headers={"Content-Disposition": f'attachment; filename="{case_id}-links-{mode}.csv"'})

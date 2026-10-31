@@ -31,6 +31,7 @@ import type {
   PersonRecord,
   PredictedLink,
   SecurityAlert,
+  StrongTie,
   TimelineEvent,
   UploadTemplateResponse,
   ValidationReport,
@@ -207,6 +208,8 @@ export const api = {
     sp.set('offset', String(params.offset ?? 0));
     return request<PaginatedResponse<PredictedLink>>(`${casePath(caseId)}/analysis/${enc(runId)}/predicted_links?${sp}`);
   },
+  getStrongestTies: (caseId: string, runId: string, limit = 15) =>
+    request<{ items: StrongTie[]; note: string }>(`${casePath(caseId)}/analysis/${enc(runId)}/strongest_ties?limit=${limit}`),
   getInferredLeads: (caseId: string, level = 'medium,weak', limit = 50, offset = 0) =>
     request<PaginatedResponse<InferredRelationship>>(`${casePath(caseId)}/leads?level=${enc(level)}&limit=${limit}&offset=${offset}`),
   getPairEvidence: (caseId: string, personA: string, personB: string) =>

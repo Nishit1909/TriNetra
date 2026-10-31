@@ -184,5 +184,5 @@ def score(inferred, weights):
         pts = sum(_inferred_contribution(row["factors"], row["same_dept"], weights).values())
         s = max(0.0, min(100.0, 100.0 * pts / scale)) if scale else 0.0
         row["lead_strength"] = round(s, 1)
-        row["lead_level"] = "high" if s >= 60 else ("medium" if s >= 30 else "low")
+        row["lead_level"] = "strong" if s >= 60 else ("medium" if s >= 30 else "weak")   # same vocabulary as the GAStech layer
     return inferred

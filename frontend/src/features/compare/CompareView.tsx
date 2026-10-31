@@ -141,7 +141,7 @@ export const CompareView: React.FC<CompareViewProps> = ({ caseId, onSelectPerson
               </h2>
               {comparison.biggest_rank_changes.length === 0 ? (
                 <p className="text-xs text-slate-400">
-                  No rank changes between these two runs (this case has no inferred GPS co-location layer).
+                  No influence-rank changes between these two runs: the added links did not change anyone's PageRank position.
                 </p>
               ) : (
                 <div className="space-y-2">
